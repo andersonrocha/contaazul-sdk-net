@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>ContaAzul.Sdk.Net</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    
+    <!-- Package Information -->
+    <PackageId>ContaAzul.Sdk.Net</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Anderson Rocha</Authors>
+    <Company>ContaAzul SDK</Company>
+    <Description>SDK não oficial em .NET para integração com a API ContaAzul. Facilita a integração com recursos como Pessoas, Vendas e Notas Fiscais de Serviço.</Description>
+    <PackageTags>contaazul;api;sdk;dotnet;netstandard;integration;erp</PackageTags>
+    <PackageProjectUrl>https://github.com/andersonrocha/contaazul-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/andersonrocha/contaazul-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>
+      v1.0.0:
+      - Implementação inicial do SDK
+      - Suporte para API de Pessoas
+      - Suporte para API de Vendas
+      - Suporte para API de Notas Fiscais de Serviço
+      - Sistema de autenticação OAuth2
+      - Refresh automático de token
+    </PackageReleaseNotes>
+    
+    <!-- Build Configuration -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>contaazul-sdk-net-tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
+

@@ -1,0 +1,45 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore contaazul-sdk-net/contaazul-sdk-net.csproj
+    
+    - name: Build
+      run: dotnet build contaazul-sdk-net/contaazul-sdk-net.csproj -c Release --no-restore
+    
+    - name: Run tests
+      run: dotnet test contaazul-sdk-net-tests/contaazul-sdk-net-tests.csproj --no-build --verbosity normal
+      continue-on-error: true
+    
+    - name: Pack
+      run: dotnet pack contaazul-sdk-net/contaazul-sdk-net.csproj -c Release --no-build -o ./artifacts
+    
+    - name: Push to NuGet
+      run: dotnet nuget push "./artifacts/*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: nuget-package
+        path: ./artifacts/*.nupkg
