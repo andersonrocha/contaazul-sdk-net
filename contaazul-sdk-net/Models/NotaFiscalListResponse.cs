@@ -5,19 +5,10 @@ namespace ContaAzul.Sdk.Net.Models
 {
     public class NotaFiscalListResponse
     {
-        [JsonProperty("data")]
-        public List<NotaFiscal> Data { get; set; }
+        [JsonProperty("itens")]
+        public List<NotaFiscal> Itens { get; set; }
 
-        [JsonProperty("pagina")]
-        public int Pagina { get; set; }
-
-        [JsonProperty("tamanho_pagina")]
-        public int TamanhoPagina { get; set; }
-
-        [JsonProperty("total_registros")]
-        public int TotalRegistros { get; set; }
-
-        [JsonProperty("total_paginas")]
-        public int TotalPaginas { get; set; }
+        [JsonProperty("paginacao")]
+        public Paginacao Paginacao { get; set; }
     }
 }

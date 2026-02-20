@@ -81,6 +81,30 @@ namespace ContaAzul.Sdk.Net
             : this(clientId, clientSecret, null, null, baseUrl, httpClient)
         {
         }
+       
+       /// <summary>
+       /// Builds the ContaAzul OAuth2 authorization URL with the specified parameters.
+       /// </summary>
+       /// <param name="clientId">The client ID for OAuth authentication.</param>
+       /// <param name="redirectUri">The redirect URI to be used in the OAuth flow.</param>
+       /// <param name="state">A unique state string to prevent CSRF attacks.</param>
+       /// <param name="scope">The scope(s) to request, separated by spaces (e.g., "openid profile aws.cognito.signin.user.admin").</param>
+       /// <returns>The formatted authorization URL.</returns>
+       public static string BuildAuthorizationUrl(string clientId, string redirectUri, string state, string scope)
+       {
+           if (string.IsNullOrWhiteSpace(clientId)) throw new ArgumentNullException(nameof(clientId));
+           if (string.IsNullOrWhiteSpace(redirectUri)) throw new ArgumentNullException(nameof(redirectUri));
+           if (string.IsNullOrWhiteSpace(state)) throw new ArgumentNullException(nameof(state));
+           if (string.IsNullOrWhiteSpace(scope)) throw new ArgumentNullException(nameof(scope));
+
+           // Validate redirectUri is a valid absolute URL
+           if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uriResult))
+           {
+               throw new ArgumentException("redirectUri must be a valid absolute URL.", nameof(redirectUri));
+           }
+           var query = $"response_type=code&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={Uri.EscapeDataString(state)}&scope={Uri.EscapeDataString(scope.Replace(" ", "+"))}";
+           return $"{AuthBaseUrl}/oauth2/authorize?{query}";
+       }
 
         /// <summary>
         /// Authorizes the client using the provided authorization code and redirect URI.

@@ -317,4 +317,322 @@ public class ContaAzulApiClientTests
             Assert.That(client.RefreshToken, Is.EqualTo(refreshToken));
         });
     }
+
+    #region BuildAuthorizationUrl Tests
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithValidParametersThenReturnsCorrectUrl()
+    {
+        var clientId = "3d0hgi6c523vj9u4t47h029asg";
+        var redirectUri = "https://www.contaazul.com/";
+        var state = "546512316845316541";
+        var scope = "openid profile aws.cognito.signin.user.admin";
+
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Does.StartWith("https://auth.contaazul.com/oauth2/authorize?"));
+            Assert.That(result, Does.Contain("response_type=code"));
+            Assert.That(result, Does.Contain($"client_id={Uri.EscapeDataString(clientId)}"));
+            Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
+            Assert.That(result, Does.Contain($"state={Uri.EscapeDataString(state)}"));
+            Assert.That(result, Does.Contain("scope=openid%2Bprofile%2Baws.cognito.signin.user.admin"));
+        });
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithScopeContainingSpacesThenReplacesWithPlus()
+    {
+        var clientId = "test-client-id";
+        var redirectUri = "https://example.com/callback";
+        var state = "random-state";
+        var scope = "openid profile email";
+
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
+
+        Assert.That(result, Does.Contain("scope=openid%2Bprofile%2Bemail"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithSpecialCharactersInClientIdThenEncodesCorrectly()
+    {
+        var clientId = "client+id&special=chars";
+        var redirectUri = "https://example.com/callback";
+        var state = "state-123";
+        var scope = "openid";
+
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
+
+        Assert.That(result, Does.Contain($"client_id={Uri.EscapeDataString(clientId)}"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithSpecialCharactersInRedirectUriThenEncodesCorrectly()
+    {
+        var clientId = "test-client-id";
+        var redirectUri = "https://example.com/callback?param=value&other=test";
+        var state = "state-123";
+        var scope = "openid";
+
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
+
+        Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithSpecialCharactersInStateThenEncodesCorrectly()
+    {
+        var clientId = "test-client-id";
+        var redirectUri = "https://example.com/callback";
+        var state = "state with spaces & special=chars";
+        var scope = "openid";
+
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
+
+        Assert.That(result, Does.Contain($"state={Uri.EscapeDataString(state)}"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithNullClientIdThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                null!,
+                "https://example.com/callback",
+                "state-123",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("clientId"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithEmptyClientIdThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                string.Empty,
+                "https://example.com/callback",
+                "state-123",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("clientId"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithWhitespaceClientIdThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "   ",
+                "https://example.com/callback",
+                "state-123",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("clientId"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithNullRedirectUriThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                null!,
+                "state-123",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("redirectUri"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithEmptyRedirectUriThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                string.Empty,
+                "state-123",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("redirectUri"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithWhitespaceRedirectUriThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "   ",
+                "state-123",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("redirectUri"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithInvalidRedirectUriThenThrowsArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "not-a-valid-url",
+                "state-123",
+                "openid"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exception!.ParamName, Is.EqualTo("redirectUri"));
+            Assert.That(exception.Message, Does.Contain("valid absolute URL"));
+        });
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithRelativeRedirectUriThenThrowsArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "/callback",
+                "state-123",
+                "openid"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exception!.ParamName, Is.EqualTo("redirectUri"));
+            Assert.That(exception.Message, Does.Contain("valid absolute URL"));
+        });
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithNullStateThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "https://example.com/callback",
+                null!,
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("state"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithEmptyStateThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "https://example.com/callback",
+                string.Empty,
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("state"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithWhitespaceStateThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "https://example.com/callback",
+                "   ",
+                "openid"));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("state"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithNullScopeThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "https://example.com/callback",
+                "state-123",
+                null!));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("scope"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithEmptyScopeThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "https://example.com/callback",
+                "state-123",
+                string.Empty));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("scope"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithWhitespaceScopeThenThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ContaAzulApiClient.BuildAuthorizationUrl(
+                "test-client-id",
+                "https://example.com/callback",
+                "state-123",
+                "   "));
+
+        Assert.That(exception!.ParamName, Is.EqualTo("scope"));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithHttpsRedirectUriThenSucceeds()
+    {
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(
+            "test-client-id",
+            "https://example.com/callback",
+            "state-123",
+            "openid");
+
+        Assert.That(result, Is.Not.Null.And.Not.Empty);
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithHttpRedirectUriThenSucceeds()
+    {
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(
+            "test-client-id",
+            "http://localhost:3000/callback",
+            "state-123",
+            "openid");
+
+        Assert.That(result, Is.Not.Null.And.Not.Empty);
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithCustomPortInRedirectUriThenSucceeds()
+    {
+        var redirectUri = "https://example.com:8443/callback";
+        
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(
+            "test-client-id",
+            redirectUri,
+            "state-123",
+            "openid");
+
+        Assert.That(result, Does.Contain(Uri.EscapeDataString(redirectUri)));
+    }
+
+    [Test]
+    public void WhenBuildAuthorizationUrlWithMultipleScopesThenFormatsCorrectly()
+    {
+        var result = ContaAzulApiClient.BuildAuthorizationUrl(
+            "test-client-id",
+            "https://example.com/callback",
+            "state-123",
+            "openid profile email address phone");
+
+        Assert.That(result, Does.Contain("scope=openid%2Bprofile%2Bemail%2Baddress%2Bphone"));
+    }
+
+    #endregion
 }
