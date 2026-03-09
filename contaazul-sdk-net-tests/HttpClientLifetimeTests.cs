@@ -58,7 +58,7 @@ public class HttpClientLifetimeTests
         var authHandler = BuildAuthHandlerReturning(tokenResponse);
         using (var authHttpClient = BuildAuthHttpClient(authHandler))
         using (var client = new ContaAzulApiClient(
-            ClientId, ClientSecret, null, null,
+            ClientId, ClientSecret, accessToken: null, refreshToken: null,
             authHttpClient: authHttpClient))
         {
             var result = await client.AuthorizeAsync("auth-code", "https://app.com/callback");
@@ -114,7 +114,7 @@ public class HttpClientLifetimeTests
         var authHttpClient = BuildAuthHttpClient(authHandler);
 
         var client = new ContaAzulApiClient(
-            ClientId, ClientSecret, null, null,
+            ClientId, ClientSecret, accessToken: null, refreshToken: null,
             authHttpClient: authHttpClient);
 
         client.Dispose();
@@ -158,7 +158,7 @@ public class HttpClientLifetimeTests
 
         using (var authHttpClient = BuildAuthHttpClient(authHandler))
         using (var client = new ContaAzulApiClient(
-            ClientId, ClientSecret, null, null,
+            ClientId, ClientSecret, accessToken: null, refreshToken: null,
             authHttpClient: authHttpClient))
         {
             client.AuthorizeAsync("code", "https://app.com/callback").GetAwaiter().GetResult();

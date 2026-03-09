@@ -44,6 +44,23 @@ namespace ContaAzul.Sdk.Net
         /// </summary>
         public DateTime TokenExpiresAt => _tokenExpiresAt;
 
+        /// <summary>
+        /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
+        /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
+        /// <para>
+        /// Subscribe to this event to persist the new <see cref="TokenRefreshedEventArgs.AccessToken"/>,
+        /// <see cref="TokenRefreshedEventArgs.RefreshToken"/> and
+        /// <see cref="TokenRefreshedEventArgs.TokenExpiresAt"/> to storage.
+        /// </para>
+        /// </summary>
+        public event EventHandler<TokenRefreshedEventArgs> TokenRefreshed;
+
+        /// <summary>Raises the <see cref="TokenRefreshed"/> event.</summary>
+        protected virtual void OnTokenRefreshed(TokenRefreshedEventArgs args)
+        {
+            TokenRefreshed?.Invoke(this, args);
+        }
+
         public PessoasApi Pessoas { get; }
         public VendasApi Vendas { get; }
         public NotasFiscaisApi NotasFiscais { get; }
@@ -54,8 +71,9 @@ namespace ContaAzul.Sdk.Net
         /// The client will automatically use the provided tokens and refresh them when necessary.
         /// <para>
         /// <b>Token rotation:</b> ContaAzul rotates the refresh token on every renewal.
-        /// Always persist the updated <see cref="AccessToken"/>, <see cref="RefreshToken"/> and
-        /// <see cref="TokenExpiresAt"/> after each API call cycle.
+        /// Subscribe to <see cref="TokenRefreshed"/> to persist the updated
+        /// <see cref="AccessToken"/>, <see cref="RefreshToken"/> and <see cref="TokenExpiresAt"/>
+        /// automatically whenever tokens change.
         /// </para>
         /// </summary>
         /// <param name="clientId">The client ID for OAuth authentication.</param>
@@ -123,8 +141,12 @@ namespace ContaAzul.Sdk.Net
         /// <param name="clientSecret">The client secret for OAuth authentication.</param>
         /// <param name="baseUrl">The base URL for the API. Defaults to the production API URL.</param>
         /// <param name="httpClient">Optional custom HttpClient instance. If not provided, a new instance will be created.</param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null) 
-            : this(clientId, clientSecret, null, null, baseUrl, httpClient)
+        /// <param name="authHttpClient">
+        /// Optional. Custom <see cref="HttpClient"/> for authentication requests. When provided, the caller is
+        /// responsible for its lifetime. When omitted, a dedicated instance is created and disposed with this client.
+        /// </param>
+        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, HttpClient authHttpClient = null) 
+            : this(clientId, clientSecret, null, null, baseUrl, httpClient, default, authHttpClient)
         {
         }
        
@@ -404,6 +426,8 @@ namespace ContaAzul.Sdk.Net
             }
 
             SetAuthorizationHeader(_accessToken);
+
+            OnTokenRefreshed(new TokenRefreshedEventArgs(tokenResponse, _tokenExpiresAt));
         }
 
         private async Task EnsureValidTokenAsync(CancellationToken cancellationToken)
