@@ -62,4 +62,12 @@ public class TokenRefreshTests
 
         Assert.That(client.RefreshToken, Is.EqualTo(string.Empty));
     }
+
+    [Test]
+    public void WhenClientIsDisposedThenResourcesAreReleased()
+    {
+        var client = new ContaAzulApiClient(ClientId, ClientSecret, "access-token", "refresh-token");
+
+        Assert.DoesNotThrow(() => client.Dispose());
+    }
 }

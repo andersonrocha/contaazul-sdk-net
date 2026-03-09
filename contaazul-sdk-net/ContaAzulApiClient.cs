@@ -19,6 +19,7 @@ namespace ContaAzul.Sdk.Net
 
         private readonly string _clientId;
         private readonly string _clientSecret;
+        private readonly SemaphoreSlim _refreshLock;
         private string _accessToken;
         private string _refreshToken;
 
@@ -57,6 +58,7 @@ namespace ContaAzul.Sdk.Net
             _clientSecret = clientSecret;
             _accessToken = accessToken;
             _refreshToken = refreshToken;
+            _refreshLock = new SemaphoreSlim(1, 1);
 
             if (!string.IsNullOrWhiteSpace(_accessToken))
             {
@@ -318,7 +320,15 @@ namespace ContaAzul.Sdk.Net
             }
             catch (HttpRequestException ex) when (IsUnauthorizedError(ex) && CanRefreshToken())
             {
-                await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
+                await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    _refreshLock.Release();
+                }
                 return await operation().ConfigureAwait(false);
             }
         }
@@ -332,6 +342,12 @@ namespace ContaAzul.Sdk.Net
         private bool CanRefreshToken()
         {
             return !string.IsNullOrWhiteSpace(_refreshToken);
+        }
+
+        public new void Dispose()
+        {
+            _refreshLock?.Dispose();
+            base.Dispose();
         }
     }
 }
