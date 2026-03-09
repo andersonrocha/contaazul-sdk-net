@@ -109,8 +109,12 @@ namespace ContaAzul.Sdk.Net
         /// Optional. <see cref="ILogger{ContaAzulApiClient}"/> for structured logging of token lifecycle and HTTP
         /// retry events. When omitted, logging is disabled.
         /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null) 
-            : base(baseUrl, httpClient)
+        /// <param name="httpOptions">
+        /// Optional. Configures the HTTP timeout applied to API and token-endpoint requests.
+        /// When omitted, the <see cref="System.Net.Http.HttpClient"/> default timeout (100 seconds) is used.
+        /// </param>
+        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null, HttpOptions httpOptions = null) 
+            : base(baseUrl, httpClient, httpOptions?.DefaultTimeout)
         {
             if (string.IsNullOrWhiteSpace(clientId))
             {
@@ -148,6 +152,11 @@ namespace ContaAzul.Sdk.Net
             _authHttpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
 
+            if (httpOptions != null)
+            {
+                _authHttpClient.Timeout = httpOptions.DefaultTimeout;
+            }
+
             if (!string.IsNullOrWhiteSpace(_accessToken))
             {
                 SetAuthorizationHeader(_accessToken);
@@ -175,8 +184,12 @@ namespace ContaAzul.Sdk.Net
         /// Optional. <see cref="ILogger{ContaAzulApiClient}"/> for structured logging of token lifecycle and HTTP
         /// retry events. When omitted, logging is disabled.
         /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null) 
-            : this(clientId, clientSecret, null, null, baseUrl, httpClient, default, authHttpClient, logger)
+        /// <param name="httpOptions">
+        /// Optional. Configures the HTTP timeout applied to API and token-endpoint requests.
+        /// When omitted, the <see cref="System.Net.Http.HttpClient"/> default timeout (100 seconds) is used.
+        /// </param>
+        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null, HttpOptions httpOptions = null) 
+            : this(clientId, clientSecret, null, null, baseUrl, httpClient, default, authHttpClient, logger, httpOptions)
         {
         }
        

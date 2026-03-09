@@ -15,7 +15,7 @@ namespace ContaAzul.Sdk.Net.Http
         private readonly HttpClient _httpClient;
         private readonly bool _disposeClient;
 
-        public HttpClientBase(string baseUrl, HttpClient httpClient = null)
+        public HttpClientBase(string baseUrl, HttpClient httpClient = null, TimeSpan? timeout = null)
         {
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
@@ -36,6 +36,11 @@ namespace ContaAzul.Sdk.Net.Http
             _httpClient.BaseAddress = new Uri(baseUrl);
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            if (timeout.HasValue)
+            {
+                _httpClient.Timeout = timeout.Value;
+            }
         }
 
         protected void SetAuthorizationHeader(string token)
