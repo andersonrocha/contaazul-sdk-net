@@ -29,6 +29,8 @@ namespace ContaAzul.Sdk.Net
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly SemaphoreSlim _refreshLock;
+        private readonly HttpClient _authHttpClient;
+        private readonly bool _disposeAuthClient;
         private string _accessToken;
         private string _refreshToken;
         private DateTime _tokenExpiresAt;
@@ -62,12 +64,11 @@ namespace ContaAzul.Sdk.Net
         /// <param name="refreshToken">The previously stored refresh token. Valid for 5 years or until next renewal.</param>
         /// <param name="baseUrl">The base URL for the API. Defaults to the production API URL.</param>
         /// <param name="httpClient">Optional custom HttpClient instance. If not provided, a new instance will be created.</param>
-        /// <param name="tokenExpiresAt">
-        /// Optional. The UTC expiration time of the stored access token (persist the value of <see cref="TokenExpiresAt"/>).
-        /// When provided, the client performs proactive token refresh before expiry.
-        /// When omitted, the client falls back to reactive refresh on 401 responses.
+        /// <param name="authHttpClient">
+        /// Optional. Custom <see cref="HttpClient"/> for authentication requests. When provided, the caller is
+        /// responsible for its lifetime. When omitted, a dedicated instance is created and disposed with this client.
         /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default) 
+        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default, HttpClient authHttpClient = null) 
             : base(baseUrl, httpClient)
         {
             if (string.IsNullOrWhiteSpace(clientId))
@@ -86,6 +87,22 @@ namespace ContaAzul.Sdk.Net
             _refreshToken = refreshToken;
             _tokenExpiresAt = tokenExpiresAt;
             _refreshLock = new SemaphoreSlim(1, 1);
+
+            if (authHttpClient == null)
+            {
+                _authHttpClient = new HttpClient();
+                _authHttpClient.BaseAddress = new Uri(AuthBaseUrl);
+                _disposeAuthClient = true;
+            }
+            else
+            {
+                _authHttpClient = authHttpClient;
+                _disposeAuthClient = false;
+            }
+
+            var credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
+            _authHttpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
 
             if (!string.IsNullOrWhiteSpace(_accessToken))
             {
@@ -155,34 +172,14 @@ namespace ContaAzul.Sdk.Net
                 throw new ArgumentNullException(nameof(redirectUri));
             }
 
-            using (var httpClient = new HttpClient())
+            var formData = new FormUrlEncodedContent(new[]
             {
-                httpClient.BaseAddress = new Uri(AuthBaseUrl);
-                
-                var credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+                new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                new KeyValuePair<string, string>("code", code),
+                new KeyValuePair<string, string>("redirect_uri", redirectUri)
+            });
 
-                var formData = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("grant_type", "authorization_code"),
-                    new KeyValuePair<string, string>("code", code),
-                    new KeyValuePair<string, string>("redirect_uri", redirectUri)
-                });
-
-                var response = await httpClient.PostAsync("/oauth2/token", formData, cancellationToken).ConfigureAwait(false);
-                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"Request failed with status code {response.StatusCode}. Content: {content}");
-                }
-
-                var tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(content);
-
-                UpdateTokens(tokenResponse);
-
-                return tokenResponse;
-            }
+            return await PostTokenEndpointAsync(formData, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -203,20 +200,20 @@ namespace ContaAzul.Sdk.Net
                 throw new InvalidOperationException("Refresh token is not available. Please authorize first.");
             }
 
-            using (var httpClient = new HttpClient())
+            var formData = new FormUrlEncodedContent(new[]
             {
-                httpClient.BaseAddress = new Uri(AuthBaseUrl);
-                
-                var credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+                new KeyValuePair<string, string>("grant_type", "refresh_token"),
+                new KeyValuePair<string, string>("refresh_token", _refreshToken)
+            });
 
-                var formData = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("grant_type", "refresh_token"),
-                    new KeyValuePair<string, string>("refresh_token", _refreshToken)
-                });
+            return await PostTokenEndpointAsync(formData, cancellationToken).ConfigureAwait(false);
+        }
 
-                var response = await httpClient.PostAsync("/oauth2/token", formData, cancellationToken).ConfigureAwait(false);
+        private async Task<TokenResponse> PostTokenEndpointAsync(FormUrlEncodedContent formData, CancellationToken cancellationToken)
+        {
+            using (formData)
+            {
+                var response = await _authHttpClient.PostAsync("/oauth2/token", formData, cancellationToken).ConfigureAwait(false);
                 var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode)
@@ -434,6 +431,12 @@ namespace ContaAzul.Sdk.Net
         public new void Dispose()
         {
             _refreshLock?.Dispose();
+
+            if (_disposeAuthClient)
+            {
+                _authHttpClient?.Dispose();
+            }
+
             base.Dispose();
         }
     }
