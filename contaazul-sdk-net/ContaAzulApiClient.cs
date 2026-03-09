@@ -30,6 +30,8 @@ namespace ContaAzul.Sdk.Net
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly SemaphoreSlim _refreshLock;
+        private readonly SemaphoreSlim _rateLimiterLock;
+        private readonly Queue<DateTime> _requestTimestamps;
         private readonly HttpClient _authHttpClient;
         private readonly bool _disposeAuthClient;
         private string _accessToken;
@@ -51,6 +53,13 @@ namespace ContaAzul.Sdk.Net
         /// Set to <see cref="ContaAzul.Sdk.Net.RetryOptions.None"/> to disable retries.
         /// </summary>
         public RetryOptions RetryOptions { get; set; } = new RetryOptions();
+
+        /// <summary>
+        /// Controls the maximum number of API requests dispatched per second (sliding-window algorithm).
+        /// Defaults to 10 requests per second.
+        /// Set to <see cref="ContaAzul.Sdk.Net.RateLimitOptions.None"/> to disable rate limiting.
+        /// </summary>
+        public RateLimitOptions RateLimitOptions { get; set; } = new RateLimitOptions();
 
         /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
@@ -113,6 +122,8 @@ namespace ContaAzul.Sdk.Net
             _refreshToken = refreshToken;
             _tokenExpiresAt = tokenExpiresAt;
             _refreshLock = new SemaphoreSlim(1, 1);
+            _rateLimiterLock = new SemaphoreSlim(1, 1);
+            _requestTimestamps = new Queue<DateTime>();
 
             if (authHttpClient == null)
             {
@@ -380,6 +391,14 @@ namespace ContaAzul.Sdk.Net
         {
             await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
 
+            // Wrap every outgoing HTTP call with the rate limiter so that both
+            // the initial attempt and any post-refresh retry are throttled.
+            Func<Task<TResponse>> rateLimitedOperation = async () =>
+            {
+                await EnforceRateLimitAsync(cancellationToken).ConfigureAwait(false);
+                return await operation().ConfigureAwait(false);
+            };
+
             for (var attempt = 0; ; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -388,7 +407,7 @@ namespace ContaAzul.Sdk.Net
                     // Inner try handles the 401 ? token-refresh ? single retry path.
                     try
                     {
-                        return await operation().ConfigureAwait(false);
+                        return await rateLimitedOperation().ConfigureAwait(false);
                     }
                     catch (ContaAzulAuthenticationException) when (CanRefreshToken())
                     {
@@ -401,7 +420,7 @@ namespace ContaAzul.Sdk.Net
                         {
                             _refreshLock.Release();
                         }
-                        return await operation().ConfigureAwait(false);
+                        return await rateLimitedOperation().ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex) when (IsTransientError(ex) && attempt < RetryOptions.MaxRetries)
@@ -492,9 +511,70 @@ namespace ContaAzul.Sdk.Net
             return TimeSpan.FromMilliseconds(cappedMs);
         }
 
+        /// <summary>
+        /// Throttles the caller using a sliding-window algorithm so that at most
+        /// <see cref="RateLimitOptions.RequestsPerSecond"/> API requests are dispatched per second.
+        /// When the limit is reached the method awaits asynchronously until a slot becomes available.
+        /// Does nothing when <see cref="RateLimitOptions.RequestsPerSecond"/> is &lt;= 0.
+        /// </summary>
+        private async Task EnforceRateLimitAsync(CancellationToken cancellationToken)
+        {
+            if (RateLimitOptions == null || RateLimitOptions.RequestsPerSecond <= 0)
+            {
+                return;
+            }
+
+            await _rateLimiterLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            var lockHeld = true;
+            try
+            {
+                while (true)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var now = DateTime.UtcNow;
+                    var windowStart = now.AddSeconds(-1);
+
+                    // Evict timestamps that have left the 1-second window.
+                    while (_requestTimestamps.Count > 0 && _requestTimestamps.Peek() <= windowStart)
+                    {
+                        _requestTimestamps.Dequeue();
+                    }
+
+                    if (_requestTimestamps.Count < RateLimitOptions.RequestsPerSecond)
+                    {
+                        _requestTimestamps.Enqueue(now);
+                        return;
+                    }
+
+                    // Compute how long until the oldest request leaves the window.
+                    var delay = _requestTimestamps.Peek().AddSeconds(1) - DateTime.UtcNow;
+                    if (delay <= TimeSpan.Zero)
+                    {
+                        continue;
+                    }
+
+                    // Release the lock while waiting to allow other callers to make progress.
+                    lockHeld = false;
+                    _rateLimiterLock.Release();
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                    await _rateLimiterLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    lockHeld = true;
+                }
+            }
+            finally
+            {
+                if (lockHeld)
+                {
+                    _rateLimiterLock.Release();
+                }
+            }
+        }
+
         public new void Dispose()
         {
             _refreshLock?.Dispose();
+            _rateLimiterLock?.Dispose();
 
             if (_disposeAuthClient)
             {
