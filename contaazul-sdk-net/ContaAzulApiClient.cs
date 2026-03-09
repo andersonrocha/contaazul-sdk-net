@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -17,14 +17,30 @@ namespace ContaAzul.Sdk.Net
         private const string AuthBaseUrl = "https://auth.contaazul.com";
         private const string ApiBaseUrl = "https://api-v2.contaazul.com";
 
+        /// <summary>Access token lifetime issued by ContaAzul: 3600 seconds (1 hour).</summary>
+        public const int AccessTokenLifetimeSeconds = 3600;
+
+        /// <summary>Refresh token lifetime issued by ContaAzul: 5 years, rotated on every use.</summary>
+        public const int RefreshTokenLifetimeDays = 1825;
+
+        // Proactive buffer: refresh 5 minutes before expiry (~8% of the 3600s lifetime).
+        private const int TokenExpirationBufferSeconds = 300;
+
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly SemaphoreSlim _refreshLock;
         private string _accessToken;
         private string _refreshToken;
+        private DateTime _tokenExpiresAt;
 
         public string AccessToken => _accessToken;
         public string RefreshToken => _refreshToken;
+
+        /// <summary>
+        /// Gets the UTC date and time when the current access token expires.
+        /// Returns <see cref="DateTime.MinValue"/> if no expiration has been set.
+        /// </summary>
+        public DateTime TokenExpiresAt => _tokenExpiresAt;
 
         public PessoasApi Pessoas { get; }
         public VendasApi Vendas { get; }
@@ -32,16 +48,26 @@ namespace ContaAzul.Sdk.Net
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContaAzulApiClient"/> class with stored tokens.
-        /// Use this constructor when you have previously obtained and stored access and refresh tokens.
+        /// Use this constructor when restoring a previously authenticated session from storage.
         /// The client will automatically use the provided tokens and refresh them when necessary.
+        /// <para>
+        /// <b>Token rotation:</b> ContaAzul rotates the refresh token on every renewal.
+        /// Always persist the updated <see cref="AccessToken"/>, <see cref="RefreshToken"/> and
+        /// <see cref="TokenExpiresAt"/> after each API call cycle.
+        /// </para>
         /// </summary>
         /// <param name="clientId">The client ID for OAuth authentication.</param>
         /// <param name="clientSecret">The client secret for OAuth authentication.</param>
         /// <param name="accessToken">The previously stored access token.</param>
-        /// <param name="refreshToken">The previously stored refresh token.</param>
+        /// <param name="refreshToken">The previously stored refresh token. Valid for 5 years or until next renewal.</param>
         /// <param name="baseUrl">The base URL for the API. Defaults to the production API URL.</param>
         /// <param name="httpClient">Optional custom HttpClient instance. If not provided, a new instance will be created.</param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null) 
+        /// <param name="tokenExpiresAt">
+        /// Optional. The UTC expiration time of the stored access token (persist the value of <see cref="TokenExpiresAt"/>).
+        /// When provided, the client performs proactive token refresh before expiry.
+        /// When omitted, the client falls back to reactive refresh on 401 responses.
+        /// </param>
+        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default) 
             : base(baseUrl, httpClient)
         {
             if (string.IsNullOrWhiteSpace(clientId))
@@ -58,6 +84,7 @@ namespace ContaAzul.Sdk.Net
             _clientSecret = clientSecret;
             _accessToken = accessToken;
             _refreshToken = refreshToken;
+            _tokenExpiresAt = tokenExpiresAt;
             _refreshLock = new SemaphoreSlim(1, 1);
 
             if (!string.IsNullOrWhiteSpace(_accessToken))
@@ -152,10 +179,7 @@ namespace ContaAzul.Sdk.Net
 
                 var tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(content);
 
-                _accessToken = tokenResponse.AccessToken;
-                _refreshToken = tokenResponse.RefreshToken;
-
-                SetAuthorizationHeader(_accessToken);
+                UpdateTokens(tokenResponse);
 
                 return tokenResponse;
             }
@@ -163,7 +187,12 @@ namespace ContaAzul.Sdk.Net
 
         /// <summary>
         /// Refreshes the access token using the current refresh token.
-        /// This method requests a new access token from the ContaAzul authentication server.
+        /// ContaAzul issues a new access token valid for <see cref="AccessTokenLifetimeSeconds"/> seconds.
+        /// <para>
+        /// <b>Token rotation:</b> each call invalidates the current refresh token and returns a new one.
+        /// Always persist <see cref="AccessToken"/>, <see cref="RefreshToken"/> and <see cref="TokenExpiresAt"/>
+        /// after this method completes.
+        /// </para>
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>A <see cref="TokenResponse"/> containing the new access and refresh tokens.</returns>
@@ -197,10 +226,7 @@ namespace ContaAzul.Sdk.Net
 
                 var tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(content);
 
-                _accessToken = tokenResponse.AccessToken;
-                _refreshToken = tokenResponse.RefreshToken;
-
-                SetAuthorizationHeader(_accessToken);
+                UpdateTokens(tokenResponse);
 
                 return tokenResponse;
             }
@@ -210,9 +236,20 @@ namespace ContaAzul.Sdk.Net
         /// Sets the access token to be used for API requests and updates the authorization header.
         /// </summary>
         /// <param name="accessToken">The access token to set.</param>
-        public void SetAccessToken(string accessToken)
+        /// <param name="expiresIn">
+        /// Optional. Token lifetime in seconds as returned by the authorization server
+        /// (ContaAzul issues <see cref="AccessTokenLifetimeSeconds"/> seconds).
+        /// When provided, enables proactive token refresh before expiry.
+        /// </param>
+        public void SetAccessToken(string accessToken, int expiresIn = 0)
         {
             _accessToken = accessToken;
+
+            if (expiresIn > 0)
+            {
+                _tokenExpiresAt = DateTime.UtcNow.AddSeconds(expiresIn);
+            }
+
             SetAuthorizationHeader(_accessToken);
         }
 
@@ -314,6 +351,8 @@ namespace ContaAzul.Sdk.Net
 
         private async Task<TResponse> ExecuteWithRetryAsync<TResponse>(Func<Task<TResponse>> operation, CancellationToken cancellationToken)
         {
+            await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
+
             try
             {
                 return await operation().ConfigureAwait(false);
@@ -342,6 +381,54 @@ namespace ContaAzul.Sdk.Net
         private bool CanRefreshToken()
         {
             return !string.IsNullOrWhiteSpace(_refreshToken);
+        }
+
+        /// <summary>
+        /// Returns true when the access token is expired or will expire within the buffer window.
+        /// Returns false if no expiration has been recorded (e.g. token was set via SetAccessToken without expiresIn).
+        /// </summary>
+        public bool IsTokenExpired()
+        {
+            if (_tokenExpiresAt == DateTime.MinValue)
+            {
+                return false;
+            }
+            return DateTime.UtcNow >= _tokenExpiresAt.AddSeconds(-TokenExpirationBufferSeconds);
+        }
+
+        private void UpdateTokens(TokenResponse tokenResponse)
+        {
+            _accessToken = tokenResponse.AccessToken;
+            _refreshToken = tokenResponse.RefreshToken;
+
+            if (tokenResponse.ExpiresIn > 0)
+            {
+                _tokenExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn);
+            }
+
+            SetAuthorizationHeader(_accessToken);
+        }
+
+        private async Task EnsureValidTokenAsync(CancellationToken cancellationToken)
+        {
+            if (!IsTokenExpired() || !CanRefreshToken())
+            {
+                return;
+            }
+
+            await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // Re-check after acquiring the lock to avoid double refresh
+                if (IsTokenExpired() && CanRefreshToken())
+                {
+                    await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                _refreshLock.Release();
+            }
         }
 
         public new void Dispose()
