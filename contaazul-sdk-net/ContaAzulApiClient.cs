@@ -46,6 +46,13 @@ namespace ContaAzul.Sdk.Net
         public DateTime TokenExpiresAt => _tokenExpiresAt;
 
         /// <summary>
+        /// Controls how many times transient API failures are retried and how long the client waits between attempts.
+        /// Defaults to 3 retries with binary exponential backoff starting at 1 second.
+        /// Set to <see cref="ContaAzul.Sdk.Net.RetryOptions.None"/> to disable retries.
+        /// </summary>
+        public RetryOptions RetryOptions { get; set; } = new RetryOptions();
+
+        /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
         /// <para>
@@ -373,22 +380,35 @@ namespace ContaAzul.Sdk.Net
         {
             await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
 
-            try
+            for (var attempt = 0; ; attempt++)
             {
-                return await operation().ConfigureAwait(false);
-            }
-            catch (ContaAzulAuthenticationException) when (CanRefreshToken())
-            {
-                await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
+                    // Inner try handles the 401 ? token-refresh ? single retry path.
+                    try
+                    {
+                        return await operation().ConfigureAwait(false);
+                    }
+                    catch (ContaAzulAuthenticationException) when (CanRefreshToken())
+                    {
+                        await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                        try
+                        {
+                            await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            _refreshLock.Release();
+                        }
+                        return await operation().ConfigureAwait(false);
+                    }
                 }
-                finally
+                catch (Exception ex) when (IsTransientError(ex) && attempt < RetryOptions.MaxRetries)
                 {
-                    _refreshLock.Release();
+                    // Outer catch handles transient errors with exponential backoff.
+                    await Task.Delay(CalculateDelay(attempt), cancellationToken).ConfigureAwait(false);
                 }
-                return await operation().ConfigureAwait(false);
             }
         }
 
@@ -445,6 +465,31 @@ namespace ContaAzul.Sdk.Net
             {
                 _refreshLock.Release();
             }
+        }
+
+        private static bool IsTransientError(Exception ex)
+        {
+            if (ex is ContaAzulRateLimitException)
+            {
+                return true;
+            }
+
+            if (ex is ContaAzulApiException apiEx)
+            {
+                var status = (int)apiEx.StatusCode.GetValueOrDefault();
+                return status == 500 || status == 502 || status == 503 || status == 504;
+            }
+
+            return ex is HttpRequestException;
+        }
+
+        private TimeSpan CalculateDelay(int attempt)
+        {
+            var delayMs = RetryOptions.InitialDelay.TotalMilliseconds
+                * Math.Pow(RetryOptions.BackoffMultiplier, attempt);
+
+            var cappedMs = Math.Min(delayMs, RetryOptions.MaxDelay.TotalMilliseconds);
+            return TimeSpan.FromMilliseconds(cappedMs);
         }
 
         public new void Dispose()
