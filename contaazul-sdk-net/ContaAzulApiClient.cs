@@ -7,6 +7,7 @@ using ContaAzul.Sdk.Net.Apis;
 using ContaAzul.Sdk.Net.Exceptions;
 using ContaAzul.Sdk.Net.Http;
 using ContaAzul.Sdk.Net.Models;
+using Microsoft.Extensions.Logging;
 
 namespace ContaAzul.Sdk.Net
 {
@@ -34,6 +35,7 @@ namespace ContaAzul.Sdk.Net
         private readonly Queue<DateTime> _requestTimestamps;
         private readonly HttpClient _authHttpClient;
         private readonly bool _disposeAuthClient;
+        private readonly ILogger<ContaAzulApiClient> _logger;
         private string _accessToken;
         private string _refreshToken;
         private DateTime _tokenExpiresAt;
@@ -103,7 +105,11 @@ namespace ContaAzul.Sdk.Net
         /// Optional. Custom <see cref="HttpClient"/> for authentication requests. When provided, the caller is
         /// responsible for its lifetime. When omitted, a dedicated instance is created and disposed with this client.
         /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default, HttpClient authHttpClient = null) 
+        /// <param name="logger">
+        /// Optional. <see cref="ILogger{ContaAzulApiClient}"/> for structured logging of token lifecycle and HTTP
+        /// retry events. When omitted, logging is disabled.
+        /// </param>
+        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null) 
             : base(baseUrl, httpClient)
         {
             if (string.IsNullOrWhiteSpace(clientId))
@@ -124,6 +130,7 @@ namespace ContaAzul.Sdk.Net
             _refreshLock = new SemaphoreSlim(1, 1);
             _rateLimiterLock = new SemaphoreSlim(1, 1);
             _requestTimestamps = new Queue<DateTime>();
+            _logger = logger;
 
             if (authHttpClient == null)
             {
@@ -164,8 +171,12 @@ namespace ContaAzul.Sdk.Net
         /// Optional. Custom <see cref="HttpClient"/> for authentication requests. When provided, the caller is
         /// responsible for its lifetime. When omitted, a dedicated instance is created and disposed with this client.
         /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, HttpClient authHttpClient = null) 
-            : this(clientId, clientSecret, null, null, baseUrl, httpClient, default, authHttpClient)
+        /// <param name="logger">
+        /// Optional. <see cref="ILogger{ContaAzulApiClient}"/> for structured logging of token lifecycle and HTTP
+        /// retry events. When omitted, logging is disabled.
+        /// </param>
+        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null) 
+            : this(clientId, clientSecret, null, null, baseUrl, httpClient, default, authHttpClient, logger)
         {
         }
        
@@ -220,6 +231,8 @@ namespace ContaAzul.Sdk.Net
                 new KeyValuePair<string, string>("redirect_uri", redirectUri)
             });
 
+            _logger?.LogDebug("Requesting access token via authorization code grant.");
+
             return await PostTokenEndpointAsync(formData, cancellationToken).ConfigureAwait(false);
         }
 
@@ -247,6 +260,8 @@ namespace ContaAzul.Sdk.Net
                 new KeyValuePair<string, string>("refresh_token", _refreshToken)
             });
 
+            _logger?.LogDebug("Refreshing access token using refresh token grant.");
+
             return await PostTokenEndpointAsync(formData, cancellationToken).ConfigureAwait(false);
         }
 
@@ -259,10 +274,13 @@ namespace ContaAzul.Sdk.Net
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    _logger?.LogError("Token endpoint request failed with HTTP {StatusCode}.", (int)response.StatusCode);
                     ThrowApiException(response.StatusCode, content);
                 }
 
                 var tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(content);
+
+                _logger?.LogInformation("Token obtained successfully. Expires in {ExpiresIn}s.", tokenResponse.ExpiresIn);
 
                 UpdateTokens(tokenResponse);
 
@@ -411,6 +429,7 @@ namespace ContaAzul.Sdk.Net
                     }
                     catch (ContaAzulAuthenticationException) when (CanRefreshToken())
                     {
+                        _logger?.LogWarning("Received 401 Unauthorized. Refreshing access token and retrying.");
                         await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
                         try
                         {
@@ -426,7 +445,9 @@ namespace ContaAzul.Sdk.Net
                 catch (Exception ex) when (IsTransientError(ex) && attempt < RetryOptions.MaxRetries)
                 {
                     // Outer catch handles transient errors with exponential backoff.
-                    await Task.Delay(CalculateDelay(attempt), cancellationToken).ConfigureAwait(false);
+                    var delay = CalculateDelay(attempt);
+                    _logger?.LogWarning(ex, "Transient error on attempt {Attempt} of {MaxRetries}. Retrying in {DelayMs}ms.", attempt + 1, RetryOptions.MaxRetries, (int)delay.TotalMilliseconds);
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -470,6 +491,8 @@ namespace ContaAzul.Sdk.Net
             {
                 return;
             }
+
+            _logger?.LogDebug("Access token is expiring soon. Initiating proactive refresh.");
 
             await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
@@ -555,6 +578,7 @@ namespace ContaAzul.Sdk.Net
                     }
 
                     // Release the lock while waiting to allow other callers to make progress.
+                    _logger?.LogDebug("Rate limit reached ({RequestsPerSecond} req/s). Waiting {DelayMs}ms.", RateLimitOptions.RequestsPerSecond, (int)delay.TotalMilliseconds);
                     lockHeld = false;
                     _rateLimiterLock.Release();
                     await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
