@@ -1,9 +1,11 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ContaAzul.Sdk.Net.Exceptions;
 using Newtonsoft.Json;
 
 namespace ContaAzul.Sdk.Net.Http
@@ -85,7 +87,12 @@ namespace ContaAzul.Sdk.Net.Http
         protected async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.DeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ThrowApiException(response.StatusCode, content);
+            }
         }
 
         private HttpContent CreateJsonContent<T>(T data)
@@ -100,7 +107,7 @@ namespace ContaAzul.Sdk.Net.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new HttpRequestException($"Request failed with status code {response.StatusCode}. Content: {content}");
+                ThrowApiException(response.StatusCode, content);
             }
 
             if (string.IsNullOrWhiteSpace(content))
@@ -109,6 +116,22 @@ namespace ContaAzul.Sdk.Net.Http
             }
 
             return JsonConvert.DeserializeObject<TResponse>(content);
+        }
+
+        /// <summary>
+        /// Throws the most specific <see cref="ContaAzulException"/> subtype for the given HTTP status code.
+        /// </summary>
+        protected static void ThrowApiException(HttpStatusCode statusCode, string responseContent)
+        {
+            switch ((int)statusCode)
+            {
+                case 401:
+                    throw new ContaAzulAuthenticationException(responseContent);
+                case 429:
+                    throw new ContaAzulRateLimitException(responseContent);
+                default:
+                    throw new ContaAzulApiException(statusCode, responseContent);
+            }
         }
 
         public void Dispose()

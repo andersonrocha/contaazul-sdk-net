@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using ContaAzul.Sdk.Net.Apis;
+using ContaAzul.Sdk.Net.Exceptions;
 using ContaAzul.Sdk.Net.Http;
 using ContaAzul.Sdk.Net.Models;
 
@@ -240,7 +241,7 @@ namespace ContaAzul.Sdk.Net
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new HttpRequestException($"Request failed with status code {response.StatusCode}. Content: {content}");
+                    ThrowApiException(response.StatusCode, content);
                 }
 
                 var tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(content);
@@ -376,7 +377,7 @@ namespace ContaAzul.Sdk.Net
             {
                 return await operation().ConfigureAwait(false);
             }
-            catch (HttpRequestException ex) when (IsUnauthorizedError(ex) && CanRefreshToken())
+            catch (ContaAzulAuthenticationException) when (CanRefreshToken())
             {
                 await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
                 try
@@ -389,12 +390,6 @@ namespace ContaAzul.Sdk.Net
                 }
                 return await operation().ConfigureAwait(false);
             }
-        }
-
-        private bool IsUnauthorizedError(HttpRequestException ex)
-        {
-            return ex.Message.Contains("Unauthorized") || 
-                   ex.Message.Contains("401");
         }
 
         private bool CanRefreshToken()
