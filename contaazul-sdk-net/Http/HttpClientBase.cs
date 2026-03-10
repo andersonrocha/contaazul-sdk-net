@@ -64,18 +64,6 @@ namespace ContaAzul.Sdk.Net.Http
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
-        protected async Task<TResponse> PostFormUrlEncodedAsync<TResponse>(string endpoint, HttpContent content, CancellationToken cancellationToken = default)
-        {
-            var response = await _httpClient.PostAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
-            return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
-        }
-
-        public async Task<TResponse> PostFormAsync<TResponse>(string endpoint, HttpContent content, CancellationToken cancellationToken = default)
-        {
-            var response = await _httpClient.PostAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
-            return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
-        }
-
         protected async Task<TResponse> PutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             var content = CreateJsonContent(data);
@@ -141,7 +129,13 @@ namespace ContaAzul.Sdk.Net.Http
 
         public void Dispose()
         {
-            if (_disposeClient)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && _disposeClient)
             {
                 _httpClient?.Dispose();
             }

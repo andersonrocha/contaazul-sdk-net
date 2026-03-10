@@ -22,13 +22,9 @@ namespace ContaAzul.Sdk.Net
         /// <summary>Access token lifetime issued by ContaAzul: 3600 seconds (1 hour).</summary>
         public const int AccessTokenLifetimeSeconds = 3600;
 
-        /// <summary>Refresh token lifetime issued by ContaAzul: 5 years, rotated on every use.</summary>
-        public const int RefreshTokenLifetimeDays = 1825;
-
         // Proactive buffer: refresh 5 minutes before expiry (~8% of the 3600s lifetime).
         private const int TokenExpirationBufferSeconds = 300;
 
-        private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly SemaphoreSlim _refreshLock;
         private readonly SemaphoreSlim _rateLimiterLock;
@@ -126,7 +122,6 @@ namespace ContaAzul.Sdk.Net
                 throw new ArgumentNullException(nameof(clientSecret));
             }
 
-            _clientId = clientId;
             _clientSecret = clientSecret;
             _accessToken = accessToken;
             _refreshToken = refreshToken;
@@ -209,11 +204,11 @@ namespace ContaAzul.Sdk.Net
            if (string.IsNullOrWhiteSpace(scope)) throw new ArgumentNullException(nameof(scope));
 
            // Validate redirectUri is a valid absolute URL
-           if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uriResult))
+           if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out _))
            {
                throw new ArgumentException("redirectUri must be a valid absolute URL.", nameof(redirectUri));
            }
-           var query = $"response_type=code&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={Uri.EscapeDataString(state)}&scope={Uri.EscapeDataString(scope.Replace(" ", "+"))}";
+           var query = $"response_type=code&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={Uri.EscapeDataString(state)}&scope={Uri.EscapeDataString(scope).Replace("%20", "+")}";
            return $"{AuthBaseUrl}/oauth2/authorize?{query}";
        }
 
@@ -608,17 +603,20 @@ namespace ContaAzul.Sdk.Net
             }
         }
 
-        public new void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _refreshLock?.Dispose();
-            _rateLimiterLock?.Dispose();
-
-            if (_disposeAuthClient)
+            if (disposing)
             {
-                _authHttpClient?.Dispose();
+                _refreshLock?.Dispose();
+                _rateLimiterLock?.Dispose();
+
+                if (_disposeAuthClient)
+                {
+                    _authHttpClient?.Dispose();
+                }
             }
 
-            base.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

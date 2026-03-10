@@ -338,7 +338,7 @@ public class ContaAzulApiClientTests
             Assert.That(result, Does.Contain($"client_id={Uri.EscapeDataString(clientId)}"));
             Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
             Assert.That(result, Does.Contain($"state={Uri.EscapeDataString(state)}"));
-            Assert.That(result, Does.Contain("scope=openid%2Bprofile%2Baws.cognito.signin.user.admin"));
+            Assert.That(result, Does.Contain("scope=openid+profile+aws.cognito.signin.user.admin"));
         });
     }
 
@@ -352,7 +352,7 @@ public class ContaAzulApiClientTests
 
         var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
 
-        Assert.That(result, Does.Contain("scope=openid%2Bprofile%2Bemail"));
+        Assert.That(result, Does.Contain("scope=openid+profile+email"));
     }
 
     [Test]
@@ -631,7 +631,7 @@ public class ContaAzulApiClientTests
             "state-123",
             "openid profile email address phone");
 
-        Assert.That(result, Does.Contain("scope=openid%2Bprofile%2Bemail%2Baddress%2Bphone"));
+        Assert.That(result, Does.Contain("scope=openid+profile+email+address+phone"));
     }
 
     #endregion
