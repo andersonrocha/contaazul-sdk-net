@@ -35,6 +35,7 @@ namespace ContaAzul.Sdk.Net
         private volatile string _accessToken;
         private volatile string _refreshToken;
         private DateTime _tokenExpiresAt;
+        private volatile bool _disposed;
 
         public string AccessToken => _accessToken;
         public string RefreshToken => _refreshToken;
@@ -206,6 +207,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>A <see cref="TokenResponse"/> containing the access and refresh tokens.</returns>
         public async Task<TokenResponse> AuthorizeAsync(string code, string redirectUri, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             if (string.IsNullOrWhiteSpace(code))
             {
                 throw new ArgumentNullException(nameof(code));
@@ -241,6 +243,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>A <see cref="TokenResponse"/> containing the new access and refresh tokens.</returns>
         public async Task<TokenResponse> RefreshTokenAsync(CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             if (string.IsNullOrWhiteSpace(_refreshToken))
             {
                 throw new InvalidOperationException("Refresh token is not available. Please authorize first.");
@@ -300,6 +303,7 @@ namespace ContaAzul.Sdk.Net
         /// </param>
         public void SetAccessToken(string accessToken, int expiresIn = 0)
         {
+            ThrowIfDisposed();
             _accessToken = accessToken;
 
             if (expiresIn > 0)
@@ -314,6 +318,7 @@ namespace ContaAzul.Sdk.Net
         /// <param name="refreshToken">The refresh token to set.</param>
         public void SetRefreshToken(string refreshToken)
         {
+            ThrowIfDisposed();
             _refreshToken = refreshToken;
         }
 
@@ -327,6 +332,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>The deserialized response from the API.</returns>
         public async Task<TResponse> GetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             return await ExecuteWithRetryAsync(
                 async () => await CoreGetAsync<TResponse>(endpoint, cancellationToken).ConfigureAwait(false),
                 cancellationToken
@@ -345,6 +351,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>The deserialized response from the API.</returns>
         public async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             return await ExecuteWithRetryAsync(
                 async () => await CorePostAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
                 cancellationToken
@@ -363,6 +370,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>The deserialized response from the API.</returns>
         public async Task<TResponse> PutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             return await ExecuteWithRetryAsync(
                 async () => await CorePutAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
                 cancellationToken
@@ -379,6 +387,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>The deserialized response from the API.</returns>
         public async Task<TResponse> DeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             return await ExecuteWithRetryAsync(
                 async () => await CoreDeleteAsync<TResponse>(endpoint, cancellationToken).ConfigureAwait(false),
                 cancellationToken
@@ -394,6 +403,7 @@ namespace ContaAzul.Sdk.Net
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             await ExecuteWithRetryAsync(
                 async () =>
                 {
@@ -592,8 +602,38 @@ namespace ContaAzul.Sdk.Net
             }
         }
 
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(ContaAzulApiClient));
+            }
+        }
+
+        /// <summary>
+        /// Sends a PATCH request to the specified API endpoint with the provided data and deserializes the response.
+        /// Automatically retries the request if the access token is expired and can be refreshed.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request data to be sent.</typeparam>
+        /// <typeparam name="TResponse">The type to which the response will be deserialized.</typeparam>
+        /// <param name="endpoint">The API endpoint to send the PATCH request to.</param>
+        /// <param name="data">The data to send in the PATCH request body.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>The deserialized response from the API.</returns>
+        public async Task<TResponse> PatchAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            return await ExecuteWithRetryAsync(
+                async () => await CorePatchAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
         protected override void Dispose(bool disposing)
         {
+            if (_disposed) return;
+            _disposed = true;
+
             if (disposing)
             {
                 _refreshLock?.Dispose();

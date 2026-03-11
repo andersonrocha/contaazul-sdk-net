@@ -46,12 +46,19 @@ namespace ContaAzul.Sdk.Net.Extensions
 
             services.AddSingleton<IContaAzulApiClient>(sp =>
             {
-                var resolvedOptions = options ?? new ContaAzulApiClientOptions();
-
-                if (resolvedOptions.Logger == null)
+                // D6: always build a fresh copy so the caller's options object is never mutated
+                // (e.g. Logger would otherwise be silently injected into the caller's instance).
+                var resolvedOptions = new ContaAzulApiClientOptions
                 {
-                    resolvedOptions.Logger = sp.GetService<ILogger<ContaAzulApiClient>>();
-                }
+                    BaseUrl          = options?.BaseUrl,
+                    HttpClient       = options?.HttpClient,
+                    AuthHttpClient   = options?.AuthHttpClient,
+                    HttpOptions      = options?.HttpOptions,
+                    TokenExpiresAt   = options?.TokenExpiresAt ?? default,
+                    RetryOptions     = options?.RetryOptions,
+                    RateLimitOptions = options?.RateLimitOptions,
+                    Logger           = options?.Logger ?? sp.GetService<ILogger<ContaAzulApiClient>>()
+                };
 
                 return new ContaAzulApiClient(clientId, clientSecret, resolvedOptions);
             });

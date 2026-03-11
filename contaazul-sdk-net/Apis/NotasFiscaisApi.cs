@@ -9,10 +9,10 @@ namespace ContaAzul.Sdk.Net.Apis
     public class NotasFiscaisApi
     {
         private const string NotasFiscaisEndpoint = "/v1/notas-fiscais-servico";
-        
-        private readonly ContaAzulApiClient _client;
 
-        internal NotasFiscaisApi(ContaAzulApiClient client)
+        private readonly IContaAzulApiClient _client;
+
+        internal NotasFiscaisApi(IContaAzulApiClient client)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
         }

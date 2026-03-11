@@ -15,7 +15,7 @@ namespace ContaAzul.Sdk.Net.Http
         private readonly HttpClient _httpClient;
         private readonly bool _disposeClient;
 
-        public HttpClientBase(string baseUrl, HttpClient httpClient = null, TimeSpan? timeout = null)
+        internal HttpClientBase(string baseUrl, HttpClient httpClient = null, TimeSpan? timeout = null)
         {
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
@@ -96,6 +96,17 @@ namespace ContaAzul.Sdk.Net.Http
         protected async Task<TResponse> CorePutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             var request = CreateRequest(HttpMethod.Put, endpoint, CreateJsonContent(data));
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends a PATCH request. Uses <c>new HttpMethod("PATCH")</c> for .NET Standard 2.0 compatibility
+        /// (<c>HttpMethod.Patch</c> was added in .NET 5).
+        /// </summary>
+        protected async Task<TResponse> CorePatchAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(new HttpMethod("PATCH"), endpoint, CreateJsonContent(data));
             var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }

@@ -1,5 +1,5 @@
 using ContaAzul.Sdk.Net.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ContaAzul.Sdk.Net.Tests;
 
@@ -16,7 +16,7 @@ public class PaginacaoTests
   ""total_itens"": 1000
 }";
 
-        var result = JsonConvert.DeserializeObject<Paginacao>(json);
+        var result = JsonSerializer.Deserialize<Paginacao>(json);
 
         Assert.Multiple(() =>
         {
@@ -38,7 +38,7 @@ public class PaginacaoTests
   ""total_itens"": 0
 }";
 
-        var result = JsonConvert.DeserializeObject<Paginacao>(json);
+        var result = JsonSerializer.Deserialize<Paginacao>(json);
 
         Assert.Multiple(() =>
         {
@@ -60,7 +60,7 @@ public class PaginacaoTests
   ""total_itens"": 999900
 }";
 
-        var result = JsonConvert.DeserializeObject<Paginacao>(json);
+        var result = JsonSerializer.Deserialize<Paginacao>(json);
 
         Assert.Multiple(() =>
         {
@@ -83,8 +83,8 @@ public class PaginacaoTests
             TotalItens = 250
         };
 
-        var json = JsonConvert.SerializeObject(paginacao);
-        var result = JsonConvert.DeserializeObject<Paginacao>(json);
+        var json = JsonSerializer.Serialize(paginacao);
+        var result = JsonSerializer.Deserialize<Paginacao>(json);
 
         Assert.Multiple(() =>
         {

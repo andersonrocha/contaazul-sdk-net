@@ -1,5 +1,5 @@
 using ContaAzul.Sdk.Net.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ContaAzul.Sdk.Net.Tests;
 
@@ -25,7 +25,7 @@ public class PessoaListResponseTests
           ]
         }";
 
-        var result = JsonConvert.DeserializeObject<PessoaListResponse>(json);
+        var result = JsonSerializer.Deserialize<PessoaListResponse>(json);
 
         Assert.Multiple(() =>
         {
@@ -53,7 +53,7 @@ public class PessoaListResponseTests
           ""items"": []
         }";
 
-        var result = JsonConvert.DeserializeObject<PessoaListResponse>(json);
+        var result = JsonSerializer.Deserialize<PessoaListResponse>(json);
 
         Assert.Multiple(() =>
         {
@@ -94,7 +94,7 @@ public class PessoaListResponseTests
           ]
         }";
 
-        var result = JsonConvert.DeserializeObject<PessoaListResponse>(json);
+        var result = JsonSerializer.Deserialize<PessoaListResponse>(json);
 
         Assert.Multiple(() =>
         {

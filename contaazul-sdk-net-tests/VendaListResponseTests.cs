@@ -1,5 +1,5 @@
 using ContaAzul.Sdk.Net.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ContaAzul.Sdk.Net.Tests;
 
@@ -26,7 +26,7 @@ public class VendaListResponseTests
   ""total_itens"": 2
 }";
 
-        var result = JsonConvert.DeserializeObject<VendaListResponse>(json);
+        var result = JsonSerializer.Deserialize<VendaListResponse>(json);
 
         Assert.Multiple(() =>
         {

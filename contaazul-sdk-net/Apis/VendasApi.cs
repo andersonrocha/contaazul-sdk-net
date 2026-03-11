@@ -9,10 +9,10 @@ namespace ContaAzul.Sdk.Net.Apis
     public class VendasApi
     {
         private const string VendasEndpoint = "/v1/venda";
-        
-        private readonly ContaAzulApiClient _client;
 
-        internal VendasApi(ContaAzulApiClient client)
+        private readonly IContaAzulApiClient _client;
+
+        internal VendasApi(IContaAzulApiClient client)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
         }

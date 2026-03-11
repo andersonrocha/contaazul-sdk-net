@@ -112,6 +112,16 @@ namespace ContaAzul.Sdk.Net
         Task<TResponse> PutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Sends a PATCH request to the specified endpoint and deserializes the response.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request body.</typeparam>
+        /// <typeparam name="TResponse">The type to deserialize the response into.</typeparam>
+        /// <param name="endpoint">The API endpoint.</param>
+        /// <param name="data">The request body data.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        Task<TResponse> PatchAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Sends a DELETE request to the specified endpoint and deserializes the response.
         /// </summary>
         /// <typeparam name="TResponse">The type to deserialize the response into.</typeparam>

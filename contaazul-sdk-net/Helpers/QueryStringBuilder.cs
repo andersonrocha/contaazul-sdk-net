@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,9 @@ namespace ContaAzul.Sdk.Net.Helpers
 {
     internal static class QueryStringBuilder
     {
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache =
+            new ConcurrentDictionary<Type, PropertyInfo[]>();
+
         public static string BuildEndpoint<T>(string endpoint, T filter) where T : class
         {
             if (string.IsNullOrWhiteSpace(endpoint))
@@ -35,7 +39,9 @@ namespace ContaAzul.Sdk.Net.Helpers
             }
 
             var parameters = new List<string>();
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = _propertyCache.GetOrAdd(
+                typeof(T),
+                t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance));
 
             foreach (var property in properties)
             {

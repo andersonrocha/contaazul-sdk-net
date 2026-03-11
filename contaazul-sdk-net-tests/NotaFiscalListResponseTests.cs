@@ -1,5 +1,5 @@
 using ContaAzul.Sdk.Net.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ContaAzul.Sdk.Net.Tests;
 
@@ -48,7 +48,7 @@ public class NotaFiscalListResponseTests
   }
 }";
 
-        var result = JsonConvert.DeserializeObject<NotaFiscalListResponse>(json);
+        var result = JsonSerializer.Deserialize<NotaFiscalListResponse>(json);
 
         Assert.Multiple(() =>
         {
@@ -87,7 +87,7 @@ public class NotaFiscalListResponseTests
   }
 }";
 
-        var result = JsonConvert.DeserializeObject<NotaFiscalListResponse>(json);
+        var result = JsonSerializer.Deserialize<NotaFiscalListResponse>(json);
 
         Assert.Multiple(() =>
         {
@@ -135,7 +135,7 @@ public class NotaFiscalListResponseTests
   }
 }";
 
-        var result = JsonConvert.DeserializeObject<NotaFiscalListResponse>(json);
+        var result = JsonSerializer.Deserialize<NotaFiscalListResponse>(json);
 
         Assert.Multiple(() =>
         {
@@ -170,7 +170,7 @@ public class NotaFiscalListResponseTests
   ""total_itens"": 200
 }";
 
-        var result = JsonConvert.DeserializeObject<Paginacao>(json);
+        var result = JsonSerializer.Deserialize<Paginacao>(json);
 
         Assert.Multiple(() =>
         {

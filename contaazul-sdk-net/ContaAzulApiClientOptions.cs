@@ -10,10 +10,13 @@ namespace ContaAzul.Sdk.Net
     /// </summary>
     public class ContaAzulApiClientOptions
     {
+        private const string DefaultApiBaseUrl = "https://api-v2.contaazul.com";
+
         /// <summary>
         /// The base URL for API requests. Defaults to the ContaAzul production API.
+        /// Inspecting <c>new ContaAzulApiClientOptions()</c> always reveals the URL that will be used.
         /// </summary>
-        public string BaseUrl { get; set; }
+        public string BaseUrl { get; set; } = DefaultApiBaseUrl;
 
         /// <summary>
         /// Optional custom <see cref="HttpClient"/> for API requests. When provided, the caller

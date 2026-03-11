@@ -12,7 +12,7 @@ namespace ContaAzul.Sdk.Net.Models
         public string Numero { get; set; }
 
         [JsonPropertyName("numero_rps")]
-        public string NumeroRps { get; set; }
+        public int? NumeroRps { get; set; }
 
         [JsonPropertyName("serie_rps")]
         public string SerieRps { get; set; }
@@ -33,7 +33,7 @@ namespace ContaAzul.Sdk.Net.Models
         public string IdCliente { get; set; }
 
         [JsonPropertyName("numero_venda")]
-        public int? NumeroVenda { get; set; }
+        public string NumeroVenda { get; set; }
 
         [JsonPropertyName("valor_total")]
         public decimal? ValorTotal { get; set; }
