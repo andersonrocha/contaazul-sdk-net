@@ -176,6 +176,12 @@ namespace ContaAzul.Sdk.Net
        /// <summary>
        /// Builds the ContaAzul OAuth2 authorization URL with the specified parameters.
        /// </summary>
+       /// <remarks>
+       /// This method delegates to <see cref="ContaAzulOAuthHelper.BuildAuthorizationUrl"/>.
+       /// Code programmed against <see cref="IContaAzulApiClient"/> should call
+       /// <see cref="ContaAzulOAuthHelper.BuildAuthorizationUrl"/> directly, as static
+       /// members are not accessible through an interface reference.
+       /// </remarks>
        /// <param name="clientId">The client ID for OAuth authentication.</param>
        /// <param name="redirectUri">The redirect URI to be used in the OAuth flow.</param>
        /// <param name="state">A unique state string to prevent CSRF attacks.</param>
@@ -183,18 +189,7 @@ namespace ContaAzul.Sdk.Net
        /// <returns>The formatted authorization URL.</returns>
        public static string BuildAuthorizationUrl(string clientId, string redirectUri, string state, string scope)
        {
-           if (string.IsNullOrWhiteSpace(clientId)) throw new ArgumentNullException(nameof(clientId));
-           if (string.IsNullOrWhiteSpace(redirectUri)) throw new ArgumentNullException(nameof(redirectUri));
-           if (string.IsNullOrWhiteSpace(state)) throw new ArgumentNullException(nameof(state));
-           if (string.IsNullOrWhiteSpace(scope)) throw new ArgumentNullException(nameof(scope));
-
-           // Validate redirectUri is a valid absolute URL
-           if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out _))
-           {
-               throw new ArgumentException("redirectUri must be a valid absolute URL.", nameof(redirectUri));
-           }
-           var query = $"response_type=code&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={Uri.EscapeDataString(state)}&scope={Uri.EscapeDataString(scope)}";
-           return $"{AuthBaseUrl}/oauth2/authorize?{query}";
+           return ContaAzulOAuthHelper.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
        }
 
         /// <summary>

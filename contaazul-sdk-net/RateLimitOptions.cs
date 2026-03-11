@@ -23,7 +23,16 @@ namespace ContaAzul.Sdk.Net
         /// </summary>
         public int RequestsPerSecond { get; set; } = 10;
 
-        /// <summary>Returns a <see cref="RateLimitOptions"/> instance that disables rate limiting.</summary>
+        /// <summary>
+        /// Returns a new <see cref="RateLimitOptions"/> instance with rate limiting disabled
+        /// (<see cref="RequestsPerSecond"/> = 0).
+        /// <para>
+        /// A fresh instance is returned on each access so callers can freely adjust other properties
+        /// without affecting other consumers.
+        /// This is intentional: <see cref="RateLimitOptions"/> is mutable, and a shared singleton
+        /// would allow one caller's mutations to silently affect all other consumers.
+        /// </para>
+        /// </summary>
         public static RateLimitOptions None => new RateLimitOptions { RequestsPerSecond = 0 };
     }
 }

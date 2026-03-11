@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -24,18 +25,32 @@ namespace ContaAzul.Sdk.Net.Http
 
             if (httpClient == null)
             {
+                // Internally-created client: we own its full lifetime and configuration.
                 _httpClient = new HttpClient();
                 _disposeClient = true;
+                _httpClient.BaseAddress = new Uri(baseUrl);
+                _httpClient.DefaultRequestHeaders.Accept.Clear();
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             }
             else
             {
+                // M1: Externally-provided client — respect the caller's existing configuration.
+                // Overwriting a BaseAddress that is already set (and may have dispatched requests)
+                // would throw InvalidOperationException and silently break the caller's setup.
                 _httpClient = httpClient;
                 _disposeClient = false;
-            }
 
-            _httpClient.BaseAddress = new Uri(baseUrl);
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                if (_httpClient.BaseAddress == null)
+                {
+                    _httpClient.BaseAddress = new Uri(baseUrl);
+                }
+
+                // Add Accept: application/json only if the caller has not already expressed a preference.
+                if (_httpClient.DefaultRequestHeaders.Accept.All(h => h.MediaType != "application/json"))
+                {
+                    _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
+            }
 
             if (timeout.HasValue)
             {

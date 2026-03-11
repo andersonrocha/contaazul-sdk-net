@@ -36,7 +36,16 @@ namespace ContaAzul.Sdk.Net
         /// </summary>
         public TimeSpan MaxDelay { get; set; } = TimeSpan.FromSeconds(30);
 
-        /// <summary>Returns a <see cref="RetryOptions"/> instance that disables all retries.</summary>
+        /// <summary>
+        /// Returns a new <see cref="RetryOptions"/> instance with all retries disabled
+        /// (<see cref="MaxRetries"/> = 0).
+        /// <para>
+        /// A fresh instance is returned on each access so callers can freely adjust other properties
+        /// (e.g. <see cref="InitialDelay"/>) without affecting other consumers.
+        /// This is intentional: <see cref="RetryOptions"/> is mutable, and a shared singleton
+        /// would allow one caller's mutations to silently affect all other consumers.
+        /// </para>
+        /// </summary>
         public static RetryOptions None => new RetryOptions { MaxRetries = 0 };
     }
 }

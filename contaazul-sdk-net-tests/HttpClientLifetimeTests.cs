@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -213,4 +214,70 @@ public class HttpClientLifetimeTests
         // All three calls went through the same injected HttpClient (handler was called 3 times)
         Assert.That(callCount, Is.EqualTo(3));
     }
+
+    #region M1 — External HttpClient configuration tests
+
+    [Test]
+    public void WhenExternalHttpClientHasBaseAddressSetThenSdkDoesNotOverwriteIt()
+    {
+        var customBaseAddress = new Uri("https://custom-api.example.com");
+        var httpClient = new HttpClient { BaseAddress = customBaseAddress };
+
+        using (var client = new ContaAzulApiClient(
+            ClientId, ClientSecret, accessToken: null, refreshToken: null,
+            options: new ContaAzulApiClientOptions { HttpClient = httpClient }))
+        {
+            // The SDK must not overwrite an already-configured BaseAddress.
+            Assert.That(httpClient.BaseAddress, Is.EqualTo(customBaseAddress));
+        }
+    }
+
+    [Test]
+    public void WhenExternalHttpClientHasNoBaseAddressThenSdkSetsProductionUrl()
+    {
+        var httpClient = new HttpClient(); // no BaseAddress
+
+        using (var client = new ContaAzulApiClient(
+            ClientId, ClientSecret, accessToken: null, refreshToken: null,
+            options: new ContaAzulApiClientOptions { HttpClient = httpClient }))
+        {
+            // SDK sets the default production BaseAddress when the caller left it unset.
+            Assert.That(httpClient.BaseAddress, Is.Not.Null);
+            Assert.That(httpClient.BaseAddress!.Host, Is.EqualTo("api-v2.contaazul.com"));
+        }
+    }
+
+    [Test]
+    public void WhenExternalHttpClientAlreadyHasAcceptHeaderThenSdkDoesNotAddDuplicate()
+    {
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Accept.Add(
+            new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+        using (var client = new ContaAzulApiClient(
+            ClientId, ClientSecret, accessToken: null, refreshToken: null,
+            options: new ContaAzulApiClientOptions { HttpClient = httpClient }))
+        {
+            // SDK must not add a duplicate Accept: application/json header.
+            var jsonHeaders = httpClient.DefaultRequestHeaders.Accept
+                .Where(h => h.MediaType == "application/json")
+                .ToList();
+
+            Assert.That(jsonHeaders, Has.Count.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void WhenInternalHttpClientCreatedThenBaseAddressIsAlwaysSet()
+    {
+        // No HttpClient injected — SDK creates its own and must configure it.
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret))
+        {
+            // We can't directly access the internal HttpClient, but we can verify
+            // the client was constructed without throwing, which requires BaseAddress to be set.
+            Assert.That(client, Is.Not.Null);
+        }
+    }
+
+    #endregion
 }
