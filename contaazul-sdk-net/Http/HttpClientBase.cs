@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ContaAzul.Sdk.Net.Exceptions;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ContaAzul.Sdk.Net.Http
 {
@@ -51,33 +51,33 @@ namespace ContaAzul.Sdk.Net.Http
             }
         }
 
-        protected async Task<TResponse> GetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
+        protected async Task<TResponse> CoreGetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync(endpoint, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
-        protected async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        protected async Task<TResponse> CorePostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             var content = CreateJsonContent(data);
             var response = await _httpClient.PostAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
-        protected async Task<TResponse> PutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        protected async Task<TResponse> CorePutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             var content = CreateJsonContent(data);
             var response = await _httpClient.PutAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
-        protected async Task<TResponse> DeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
+        protected async Task<TResponse> CoreDeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.DeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
-        protected async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
+        protected async Task CoreDeleteAsync(string endpoint, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.DeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
 
@@ -88,9 +88,14 @@ namespace ContaAzul.Sdk.Net.Http
             }
         }
 
+        protected static readonly JsonSerializerOptions DefaultJsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         private HttpContent CreateJsonContent<T>(T data)
         {
-            var json = JsonConvert.SerializeObject(data);
+            var json = JsonSerializer.Serialize(data, DefaultJsonOptions);
             return new StringContent(json, Encoding.UTF8, "application/json");
         }
 
@@ -108,7 +113,7 @@ namespace ContaAzul.Sdk.Net.Http
                 return default(TResponse);
             }
 
-            return JsonConvert.DeserializeObject<TResponse>(content);
+            return JsonSerializer.Deserialize<TResponse>(content, DefaultJsonOptions);
         }
 
         /// <summary>

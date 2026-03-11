@@ -62,7 +62,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulAuthenticationException>(
                 async () => await client.GetAsync<object>("/test"));
@@ -77,7 +77,7 @@ public class ErrorHandlingTests
     {
         var authHandler = BuildApiHandlerReturning(HttpStatusCode.Unauthorized, "{\"error\":\"invalid_client\"}");
         using (var authHttpClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri("https://auth.contaazul.com") })
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, authHttpClient: authHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulAuthenticationException>(
                 async () => await client.AuthorizeAsync("bad-code", "https://app.com/callback"));
@@ -95,7 +95,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulRateLimitException>(
                 async () => await client.GetAsync<object>("/test"));
@@ -104,8 +104,6 @@ public class ErrorHandlingTests
         }
     }
 
-    // --- ContaAzulApiException ---
-
     [Test]
     public void WhenApiReturns500ThenThrowsContaAzulApiException()
     {
@@ -113,7 +111,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulApiException>(
                 async () => await client.GetAsync<object>("/test"));
@@ -129,7 +127,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulApiException>(
                 async () => await client.GetAsync<object>("/test"));
@@ -139,8 +137,6 @@ public class ErrorHandlingTests
         }
     }
 
-    // --- Exception hierarchy ---
-
     [Test]
     public void WhenAuthenticationExceptionThrownThenIsContaAzulException()
     {
@@ -148,7 +144,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulAuthenticationException>(
                 async () => await client.GetAsync<object>("/test"));
@@ -164,7 +160,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             var ex = Assert.ThrowsAsync<ContaAzulRateLimitException>(
                 async () => await client.GetAsync<object>("/test"));
@@ -193,14 +189,18 @@ public class ErrorHandlingTests
         // Auth endpoint: returns a fresh token on refresh
         var authHandler = BuildApiHandlerReturning(
             HttpStatusCode.OK,
-            Newtonsoft.Json.JsonConvert.SerializeObject(tokenResponse));
+            System.Text.Json.JsonSerializer.Serialize(tokenResponse));
 
         using (var apiHttpClient = new HttpClient(apiHandler.Object))
         using (var authHttpClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri("https://auth.contaazul.com") })
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "old-token", "old-refresh",
-            "https://api-v2.contaazul.com", apiHttpClient,
-            authHttpClient: authHttpClient))
+            new ContaAzulApiClientOptions
+            {
+                BaseUrl = "https://api-v2.contaazul.com",
+                HttpClient = apiHttpClient,
+                AuthHttpClient = authHttpClient
+            }))
         {
             var result = await client.GetAsync<object>("/test");
 
@@ -216,7 +216,7 @@ public class ErrorHandlingTests
         using (var apiHttpClient = new HttpClient(handler.Object))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "token", null,
-            "https://api-v2.contaazul.com", apiHttpClient))
+            new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             Assert.ThrowsAsync<ContaAzulAuthenticationException>(
                 async () => await client.GetAsync<object>("/test"));

@@ -39,7 +39,7 @@ public class HttpClientLifetimeTests
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(
-                    Newtonsoft.Json.JsonConvert.SerializeObject(tokenResponse),
+                    System.Text.Json.JsonSerializer.Serialize(tokenResponse),
                     Encoding.UTF8, "application/json")
             });
         return handler;
@@ -59,7 +59,7 @@ public class HttpClientLifetimeTests
         using (var authHttpClient = BuildAuthHttpClient(authHandler))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, accessToken: null, refreshToken: null,
-            authHttpClient: authHttpClient))
+            options: new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             var result = await client.AuthorizeAsync("auth-code", "https://app.com/callback");
 
@@ -89,7 +89,7 @@ public class HttpClientLifetimeTests
         using (var authHttpClient = BuildAuthHttpClient(authHandler))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "old-token", "old-refresh",
-            authHttpClient: authHttpClient))
+            new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             var result = await client.RefreshTokenAsync();
 
@@ -115,7 +115,7 @@ public class HttpClientLifetimeTests
 
         var client = new ContaAzulApiClient(
             ClientId, ClientSecret, accessToken: null, refreshToken: null,
-            authHttpClient: authHttpClient);
+            options: new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient });
 
         client.Dispose();
 
@@ -148,7 +148,7 @@ public class HttpClientLifetimeTests
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(
-                    Newtonsoft.Json.JsonConvert.SerializeObject(new TokenResponse
+                    System.Text.Json.JsonSerializer.Serialize(new TokenResponse
                     {
                         AccessToken = "token",
                         RefreshToken = "refresh"
@@ -159,7 +159,7 @@ public class HttpClientLifetimeTests
         using (var authHttpClient = BuildAuthHttpClient(authHandler))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, accessToken: null, refreshToken: null,
-            authHttpClient: authHttpClient))
+            options: new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             client.AuthorizeAsync("code", "https://app.com/callback").GetAwaiter().GetResult();
         }
@@ -195,7 +195,7 @@ public class HttpClientLifetimeTests
                 {
                     StatusCode = HttpStatusCode.OK,
                     Content = new StringContent(
-                        Newtonsoft.Json.JsonConvert.SerializeObject(tokenResponse),
+                        System.Text.Json.JsonSerializer.Serialize(tokenResponse),
                         Encoding.UTF8, "application/json")
                 };
             });
@@ -203,7 +203,7 @@ public class HttpClientLifetimeTests
         using (var authHttpClient = BuildAuthHttpClient(authHandler))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "old-token", "old-refresh",
-            authHttpClient: authHttpClient))
+            new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             await client.RefreshTokenAsync();
             await client.RefreshTokenAsync();

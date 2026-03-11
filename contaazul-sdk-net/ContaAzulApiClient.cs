@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ContaAzul.Sdk.Net.Apis;
@@ -14,7 +15,7 @@ namespace ContaAzul.Sdk.Net
     /// <summary>
     /// Client for interacting with the ContaAzul API, providing authentication and access to various API endpoints.
     /// </summary>
-    public class ContaAzulApiClient : HttpClientBase
+    public class ContaAzulApiClient : HttpClientBase, IContaAzulApiClient
     {
         private const string AuthBaseUrl = "https://auth.contaazul.com";
         private const string ApiBaseUrl = "https://api-v2.contaazul.com";
@@ -25,13 +26,12 @@ namespace ContaAzul.Sdk.Net
         // Proactive buffer: refresh 5 minutes before expiry (~8% of the 3600s lifetime).
         private const int TokenExpirationBufferSeconds = 300;
 
-        private readonly string _clientSecret;
         private readonly SemaphoreSlim _refreshLock;
         private readonly SemaphoreSlim _rateLimiterLock;
         private readonly Queue<DateTime> _requestTimestamps;
         private readonly HttpClient _authHttpClient;
         private readonly bool _disposeAuthClient;
-        private readonly ILogger<ContaAzulApiClient> _logger;
+        private readonly ILogger _logger;
         private string _accessToken;
         private string _refreshToken;
         private DateTime _tokenExpiresAt;
@@ -95,22 +95,12 @@ namespace ContaAzul.Sdk.Net
         /// <param name="clientSecret">The client secret for OAuth authentication.</param>
         /// <param name="accessToken">The previously stored access token.</param>
         /// <param name="refreshToken">The previously stored refresh token. Valid for 5 years or until next renewal.</param>
-        /// <param name="baseUrl">The base URL for the API. Defaults to the production API URL.</param>
-        /// <param name="httpClient">Optional custom HttpClient instance. If not provided, a new instance will be created.</param>
-        /// <param name="authHttpClient">
-        /// Optional. Custom <see cref="HttpClient"/> for authentication requests. When provided, the caller is
-        /// responsible for its lifetime. When omitted, a dedicated instance is created and disposed with this client.
+        /// <param name="options">
+        /// Optional. Configuration options including base URL, HTTP clients, logger and timeout settings.
+        /// When omitted, defaults are applied.
         /// </param>
-        /// <param name="logger">
-        /// Optional. <see cref="ILogger{ContaAzulApiClient}"/> for structured logging of token lifecycle and HTTP
-        /// retry events. When omitted, logging is disabled.
-        /// </param>
-        /// <param name="httpOptions">
-        /// Optional. Configures the HTTP timeout applied to API and token-endpoint requests.
-        /// When omitted, the <see cref="System.Net.Http.HttpClient"/> default timeout (100 seconds) is used.
-        /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, DateTime tokenExpiresAt = default, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null, HttpOptions httpOptions = null) 
-            : base(baseUrl, httpClient, httpOptions?.DefaultTimeout)
+        public ContaAzulApiClient(string clientId, string clientSecret, string accessToken, string refreshToken, ContaAzulApiClientOptions options = null) 
+            : base(options?.BaseUrl ?? ApiBaseUrl, options?.HttpClient, options?.HttpOptions?.DefaultTimeout)
         {
             if (string.IsNullOrWhiteSpace(clientId))
             {
@@ -122,14 +112,16 @@ namespace ContaAzul.Sdk.Net
                 throw new ArgumentNullException(nameof(clientSecret));
             }
 
-            _clientSecret = clientSecret;
             _accessToken = accessToken;
             _refreshToken = refreshToken;
-            _tokenExpiresAt = tokenExpiresAt;
+            _tokenExpiresAt = options?.TokenExpiresAt ?? default;
             _refreshLock = new SemaphoreSlim(1, 1);
             _rateLimiterLock = new SemaphoreSlim(1, 1);
             _requestTimestamps = new Queue<DateTime>();
-            _logger = logger;
+            _logger = options?.Logger;
+
+            var authHttpClient = options?.AuthHttpClient;
+            var httpOptions = options?.HttpOptions;
 
             if (authHttpClient == null)
             {
@@ -157,6 +149,9 @@ namespace ContaAzul.Sdk.Net
                 SetAuthorizationHeader(_accessToken);
             }
 
+            RetryOptions = options?.RetryOptions ?? new RetryOptions();
+            RateLimitOptions = options?.RateLimitOptions ?? new RateLimitOptions();
+
             Pessoas = new PessoasApi(this);
             Vendas = new VendasApi(this);
             NotasFiscais = new NotasFiscaisApi(this);
@@ -169,22 +164,12 @@ namespace ContaAzul.Sdk.Net
         /// </summary>
         /// <param name="clientId">The client ID for OAuth authentication.</param>
         /// <param name="clientSecret">The client secret for OAuth authentication.</param>
-        /// <param name="baseUrl">The base URL for the API. Defaults to the production API URL.</param>
-        /// <param name="httpClient">Optional custom HttpClient instance. If not provided, a new instance will be created.</param>
-        /// <param name="authHttpClient">
-        /// Optional. Custom <see cref="HttpClient"/> for authentication requests. When provided, the caller is
-        /// responsible for its lifetime. When omitted, a dedicated instance is created and disposed with this client.
+        /// <param name="options">
+        /// Optional. Configuration options including base URL, HTTP clients, logger and timeout settings.
+        /// When omitted, defaults are applied.
         /// </param>
-        /// <param name="logger">
-        /// Optional. <see cref="ILogger{ContaAzulApiClient}"/> for structured logging of token lifecycle and HTTP
-        /// retry events. When omitted, logging is disabled.
-        /// </param>
-        /// <param name="httpOptions">
-        /// Optional. Configures the HTTP timeout applied to API and token-endpoint requests.
-        /// When omitted, the <see cref="System.Net.Http.HttpClient"/> default timeout (100 seconds) is used.
-        /// </param>
-        public ContaAzulApiClient(string clientId, string clientSecret, string baseUrl = ApiBaseUrl, HttpClient httpClient = null, HttpClient authHttpClient = null, ILogger<ContaAzulApiClient> logger = null, HttpOptions httpOptions = null) 
-            : this(clientId, clientSecret, null, null, baseUrl, httpClient, default, authHttpClient, logger, httpOptions)
+        public ContaAzulApiClient(string clientId, string clientSecret, ContaAzulApiClientOptions options = null) 
+            : this(clientId, clientSecret, null, null, options)
         {
         }
        
@@ -208,7 +193,7 @@ namespace ContaAzul.Sdk.Net
            {
                throw new ArgumentException("redirectUri must be a valid absolute URL.", nameof(redirectUri));
            }
-           var query = $"response_type=code&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={Uri.EscapeDataString(state)}&scope={Uri.EscapeDataString(scope).Replace("%20", "+")}";
+           var query = $"response_type=code&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={Uri.EscapeDataString(state)}&scope={Uri.EscapeDataString(scope)}";
            return $"{AuthBaseUrl}/oauth2/authorize?{query}";
        }
 
@@ -286,7 +271,7 @@ namespace ContaAzul.Sdk.Net
                     ThrowApiException(response.StatusCode, content);
                 }
 
-                var tokenResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(content);
+                var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(content, DefaultJsonOptions);
 
                 _logger?.LogInformation("Token obtained successfully. Expires in {ExpiresIn}s.", tokenResponse.ExpiresIn);
 
@@ -334,10 +319,10 @@ namespace ContaAzul.Sdk.Net
         /// <param name="endpoint">The API endpoint to send the GET request to.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>The deserialized response from the API.</returns>
-        public new async Task<TResponse> GetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
+        public async Task<TResponse> GetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
             return await ExecuteWithRetryAsync(
-                async () => await base.GetAsync<TResponse>(endpoint, cancellationToken).ConfigureAwait(false),
+                async () => await CoreGetAsync<TResponse>(endpoint, cancellationToken).ConfigureAwait(false),
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -352,10 +337,10 @@ namespace ContaAzul.Sdk.Net
         /// <param name="data">The data to send in the POST request body.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>The deserialized response from the API.</returns>
-        public new async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        public async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             return await ExecuteWithRetryAsync(
-                async () => await base.PostAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
+                async () => await CorePostAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -370,10 +355,10 @@ namespace ContaAzul.Sdk.Net
         /// <param name="data">The data to send in the PUT request body.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>The deserialized response from the API.</returns>
-        public new async Task<TResponse> PutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        public async Task<TResponse> PutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             return await ExecuteWithRetryAsync(
-                async () => await base.PutAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
+                async () => await CorePutAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -386,10 +371,10 @@ namespace ContaAzul.Sdk.Net
         /// <param name="endpoint">The API endpoint to send the DELETE request to.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>The deserialized response from the API.</returns>
-        public new async Task<TResponse> DeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
+        public async Task<TResponse> DeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
             return await ExecuteWithRetryAsync(
-                async () => await base.DeleteAsync<TResponse>(endpoint, cancellationToken).ConfigureAwait(false),
+                async () => await CoreDeleteAsync<TResponse>(endpoint, cancellationToken).ConfigureAwait(false),
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -401,12 +386,12 @@ namespace ContaAzul.Sdk.Net
         /// <param name="endpoint">The API endpoint to send the DELETE request to.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public new async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
         {
             await ExecuteWithRetryAsync(
                 async () =>
                 {
-                    await base.DeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
+                    await CoreDeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
                     return true;
                 },
                 cancellationToken

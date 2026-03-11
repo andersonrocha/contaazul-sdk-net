@@ -41,7 +41,7 @@ public class TokenRefreshedEventTests
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(
-                    Newtonsoft.Json.JsonConvert.SerializeObject(tokenResponse),
+                    System.Text.Json.JsonSerializer.Serialize(tokenResponse),
                     Encoding.UTF8, "application/json")
             });
 
@@ -54,7 +54,7 @@ public class TokenRefreshedEventTests
         TokenRefreshedEventArgs received = null;
 
         using (var authHttpClient = BuildAuthHttpClient(BuildHandlerReturningToken("at", "rt")))
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, authHttpClient: authHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             client.TokenRefreshed += (_, args) => received = args;
 
@@ -74,7 +74,7 @@ public class TokenRefreshedEventTests
         using (var authHttpClient = BuildAuthHttpClient(BuildHandlerReturningToken("refreshed-at", "rotated-rt")))
         using (var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "old-token", "old-refresh",
-            authHttpClient: authHttpClient))
+            new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             client.TokenRefreshed += (_, args) => received = args;
 
@@ -93,7 +93,7 @@ public class TokenRefreshedEventTests
         TokenRefreshedEventArgs received = null;
 
         using (var authHttpClient = BuildAuthHttpClient(BuildHandlerReturningToken()))
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, authHttpClient: authHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             client.TokenRefreshed += (_, args) => received = args;
 
@@ -111,7 +111,7 @@ public class TokenRefreshedEventTests
     public async Task WhenNoHandlerSubscribedThenNoExceptionOnTokenRefresh()
     {
         using (var authHttpClient = BuildAuthHttpClient(BuildHandlerReturningToken()))
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, authHttpClient: authHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             // No subscriber — event must not throw
             Assert.DoesNotThrowAsync(async () =>
@@ -125,7 +125,7 @@ public class TokenRefreshedEventTests
         var callCount = 0;
 
         using (var authHttpClient = BuildAuthHttpClient(BuildHandlerReturningToken()))
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, authHttpClient: authHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             client.TokenRefreshed += (_, _) => callCount++;
             client.TokenRefreshed += (_, _) => callCount++;
@@ -143,7 +143,7 @@ public class TokenRefreshedEventTests
         TokenRefreshedEventArgs received = null;
 
         using (var authHttpClient = BuildAuthHttpClient(BuildHandlerReturningToken("final-at", "final-rt")))
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, authHttpClient: authHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { AuthHttpClient = authHttpClient }))
         {
             client.TokenRefreshed += (_, args) => received = args;
 

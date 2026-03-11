@@ -86,7 +86,7 @@ public class LoggingTests
 
         using (var authClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri(AuthBaseUrl) })
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            authHttpClient: authClient, logger: logger))
+            new ContaAzulApiClientOptions { AuthHttpClient = authClient, Logger = logger }))
         {
             await client.AuthorizeAsync("auth-code", "https://app.example.com/callback");
         }
@@ -103,7 +103,7 @@ public class LoggingTests
 
         using (var authClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri(AuthBaseUrl) })
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            authHttpClient: authClient, logger: logger))
+            new ContaAzulApiClientOptions { AuthHttpClient = authClient, Logger = logger }))
         {
             Assert.ThrowsAsync<ContaAzulApiException>(async () =>
                 await client.AuthorizeAsync("bad-code", "https://app.example.com/callback"));
@@ -122,7 +122,7 @@ public class LoggingTests
 
         using (var authClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri(AuthBaseUrl) })
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            null, "refresh-token", BaseUrl, null, default, authClient, logger))
+            null, "refresh-token", new ContaAzulApiClientOptions { BaseUrl = BaseUrl, AuthHttpClient = authClient, Logger = logger }))
         {
             await client.RefreshTokenAsync();
         }
@@ -156,7 +156,7 @@ public class LoggingTests
         using (var authClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri(AuthBaseUrl) })
         using (var apiClient = new HttpClient(apiHandler.Object))
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "token", "refresh-token", BaseUrl, apiClient, default, authClient, logger))
+            "token", "refresh-token", new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = apiClient, AuthHttpClient = authClient, Logger = logger }))
         {
             client.RetryOptions = RetryOptions.None;
             await client.GetAsync<object>("/test");
@@ -188,7 +188,7 @@ public class LoggingTests
 
         using (var httpClient = new HttpClient(apiHandler.Object))
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "token", null, BaseUrl, httpClient, default, null, logger))
+            "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = httpClient, Logger = logger }))
         {
             client.RetryOptions = new RetryOptions { MaxRetries = 1, InitialDelay = TimeSpan.Zero };
             await client.GetAsync<object>("/test");
@@ -212,7 +212,7 @@ public class LoggingTests
         using (var authClient = new HttpClient(authHandler.Object) { BaseAddress = new Uri(AuthBaseUrl) })
         using (var apiClient = new HttpClient(apiHandler.Object))
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "expired-token", "refresh-token", BaseUrl, apiClient, expiredAt, authClient, logger))
+            "expired-token", "refresh-token", new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = apiClient, TokenExpiresAt = expiredAt, AuthHttpClient = authClient, Logger = logger }))
         {
             await client.GetAsync<object>("/test");
         }
@@ -230,7 +230,7 @@ public class LoggingTests
 
         using (var httpClient = new HttpClient(apiHandler.Object))
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "token", null, BaseUrl, httpClient, default, null, logger))
+            "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = httpClient, Logger = logger }))
         {
             client.RateLimitOptions = new RateLimitOptions { RequestsPerSecond = 1 };
             client.RetryOptions = RetryOptions.None;

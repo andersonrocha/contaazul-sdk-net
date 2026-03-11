@@ -53,7 +53,7 @@ public class ThreadSafetyTests
             });
 
         var httpClient = new HttpClient(mockHandler.Object);
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, "old-token", "refresh-token", "https://api-v2.contaazul.com", httpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, "old-token", "refresh-token", new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = httpClient }))
         {
             var tasks = new List<Task>();
             var exceptions = new List<Exception>();

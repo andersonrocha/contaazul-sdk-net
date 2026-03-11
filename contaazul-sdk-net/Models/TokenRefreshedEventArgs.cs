@@ -10,7 +10,7 @@ namespace ContaAzul.Sdk.Net.Models
     /// to storage whenever this event fires, so the next client instance can be restored with valid tokens.
     /// </para>
     /// </summary>
-    public class TokenRefreshedEventArgs : EventArgs
+    public sealed class TokenRefreshedEventArgs : EventArgs
     {
         /// <summary>Gets the new access token.</summary>
         public string AccessToken { get; }
@@ -26,8 +26,8 @@ namespace ContaAzul.Sdk.Net.Models
 
         /// <summary>
         /// Gets the UTC date and time at which the new access token expires.
-        /// Use this value when restoring the client via
-        /// <see cref="ContaAzulApiClient(string, string, string, string, string, System.Net.Http.HttpClient, DateTime, System.Net.Http.HttpClient)"/>.
+        /// Set <see cref="ContaAzulApiClientOptions.TokenExpiresAt"/> to this value when
+        /// restoring the client from a previously persisted session.
         /// </summary>
         public DateTime TokenExpiresAt { get; }
 

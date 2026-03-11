@@ -1,41 +1,41 @@
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ContaAzul.Sdk.Net.Models
 {
-    public class NotaFiscal
+    public sealed class NotaFiscal
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("numero")]
+        [JsonPropertyName("numero")]
         public string Numero { get; set; }
 
-        [JsonProperty("numero_rps")]
+        [JsonPropertyName("numero_rps")]
         public string NumeroRps { get; set; }
 
-        [JsonProperty("serie_rps")]
+        [JsonPropertyName("serie_rps")]
         public string SerieRps { get; set; }
 
-        [JsonProperty("data_emissao")]
+        [JsonPropertyName("data_emissao")]
         public DateTime? DataEmissao { get; set; }
 
-        [JsonProperty("data_competencia")]
+        [JsonPropertyName("data_competencia")]
         public DateTime? DataCompetencia { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; set; }
 
-        [JsonProperty("tipo_negociacao")]
+        [JsonPropertyName("tipo_negociacao")]
         public string TipoNegociacao { get; set; }
 
-        [JsonProperty("id_cliente")]
+        [JsonPropertyName("id_cliente")]
         public string IdCliente { get; set; }
 
-        [JsonProperty("numero_venda")]
+        [JsonPropertyName("numero_venda")]
         public int? NumeroVenda { get; set; }
 
-        [JsonProperty("valor_total")]
+        [JsonPropertyName("valor_total")]
         public decimal? ValorTotal { get; set; }
     }
 }

@@ -24,7 +24,7 @@ public class RateLimitingTests
         var httpClient = new HttpClient(handler.Object);
         var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "access-token", "refresh-token",
-            BaseUrl, httpClient);
+            new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = httpClient });
 
         client.RateLimitOptions = new RateLimitOptions { RequestsPerSecond = requestsPerSecond };
         client.RetryOptions = RetryOptions.None;

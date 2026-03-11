@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ContaAzul.Sdk.Net.Models
 {
-    public class PessoaListResponse
+    public sealed class PessoaListResponse
     {
-        [JsonProperty("items")]
+        [JsonPropertyName("items")]
         public List<Pessoa> Items { get; set; }
 
-        [JsonProperty("totalItems")]
+        [JsonPropertyName("totalItems")]
         public int TotalItems { get; set; }
     }
 }

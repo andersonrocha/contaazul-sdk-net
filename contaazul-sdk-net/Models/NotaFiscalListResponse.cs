@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ContaAzul.Sdk.Net.Models
 {
-    public class NotaFiscalListResponse
+    public sealed class NotaFiscalListResponse
     {
-        [JsonProperty("itens")]
+        [JsonPropertyName("itens")]
         public List<NotaFiscal> Itens { get; set; }
 
-        [JsonProperty("paginacao")]
+        [JsonPropertyName("paginacao")]
         public Paginacao Paginacao { get; set; }
     }
 }

@@ -24,7 +24,7 @@ public class RetryPolicyTests
         var httpClient = new HttpClient(handler.Object);
         var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "access-token", "refresh-token",
-            BaseUrl, httpClient);
+            new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = httpClient });
 
         client.RetryOptions = new RetryOptions
         {
@@ -202,7 +202,7 @@ public class RetryPolicyTests
 
         var httpClient = new HttpClient(handler.Object);
         using (var client = new ContaAzulApiClient(
-            ClientId, ClientSecret, "token", null, BaseUrl, httpClient))
+            ClientId, ClientSecret, "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = httpClient }))
         {
             client.RetryOptions = RetryOptions.None;
 
@@ -240,7 +240,7 @@ public class RetryPolicyTests
 
             var httpClient = new HttpClient(handler.Object);
             using (var client = new ContaAzulApiClient(
-                ClientId, ClientSecret, "token", null, BaseUrl, httpClient))
+                ClientId, ClientSecret, "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = httpClient }))
             {
                 client.RetryOptions = new RetryOptions
                 {

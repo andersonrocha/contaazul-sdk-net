@@ -308,7 +308,7 @@ public class ContaAzulApiClientTests
             clientSecret: ClientSecret,
             accessToken: accessToken,
             refreshToken: refreshToken,
-            baseUrl: customBaseUrl);
+            options: new ContaAzulApiClientOptions { BaseUrl = customBaseUrl });
 
         Assert.Multiple(() =>
         {
@@ -338,12 +338,12 @@ public class ContaAzulApiClientTests
             Assert.That(result, Does.Contain($"client_id={Uri.EscapeDataString(clientId)}"));
             Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
             Assert.That(result, Does.Contain($"state={Uri.EscapeDataString(state)}"));
-            Assert.That(result, Does.Contain("scope=openid+profile+aws.cognito.signin.user.admin"));
+            Assert.That(result, Does.Contain("scope=openid%20profile%20aws.cognito.signin.user.admin"));
         });
     }
 
     [Test]
-    public void WhenBuildAuthorizationUrlWithScopeContainingSpacesThenReplacesWithPlus()
+    public void WhenBuildAuthorizationUrlWithScopeContainingSpacesThenEncodesWithPercentTwenty()
     {
         var clientId = "test-client-id";
         var redirectUri = "https://example.com/callback";
@@ -352,7 +352,7 @@ public class ContaAzulApiClientTests
 
         var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
 
-        Assert.That(result, Does.Contain("scope=openid+profile+email"));
+        Assert.That(result, Does.Contain("scope=openid%20profile%20email"));
     }
 
     [Test]
@@ -631,7 +631,7 @@ public class ContaAzulApiClientTests
             "state-123",
             "openid profile email address phone");
 
-        Assert.That(result, Does.Contain("scope=openid+profile+email+address+phone"));
+        Assert.That(result, Does.Contain("scope=openid%20profile%20email%20address%20phone"));
     }
 
     #endregion

@@ -129,7 +129,7 @@ public class TokenExpirationTests
 
         // Simula refresh com um HttpClient separado (não podemos interceptar o de auth aqui,
         // então apenas verificamos que EnsureValidTokenAsync não lança quando não há refresh token)
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, "expired-token", null, "https://api-v2.contaazul.com", apiHttpClient))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, "expired-token", null, new ContaAzulApiClientOptions { BaseUrl = "https://api-v2.contaazul.com", HttpClient = apiHttpClient }))
         {
             // Token expirado sem refresh token: não deve tentar refresh
             client.SetAccessToken("expired-token", expiresIn: 1);
@@ -148,7 +148,7 @@ public class TokenExpirationTests
 
         var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "access-token", "refresh-token",
-            tokenExpiresAt: expiresAt);
+            new ContaAzulApiClientOptions { TokenExpiresAt = expiresAt });
 
         Assert.That(client.IsTokenExpired(), Is.False);
     }
@@ -160,7 +160,7 @@ public class TokenExpirationTests
 
         var client = new ContaAzulApiClient(
             ClientId, ClientSecret, "access-token", "refresh-token",
-            tokenExpiresAt: expiresAt);
+            new ContaAzulApiClientOptions { TokenExpiresAt = expiresAt });
 
         Assert.That(client.IsTokenExpired(), Is.True);
     }

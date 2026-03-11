@@ -73,7 +73,7 @@ public class TimeoutTests
     public void WhenClientCreatedWithHttpOptionsThenNoException()
     {
         var httpOptions = new HttpOptions { DefaultTimeout = TimeSpan.FromSeconds(15) };
-        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, httpOptions: httpOptions))
+        using (var client = new ContaAzulApiClient(ClientId, ClientSecret, new ContaAzulApiClientOptions { HttpOptions = httpOptions }))
         {
             Assert.That(client, Is.Not.Null);
         }
@@ -88,7 +88,7 @@ public class TimeoutTests
         var apiClient = new HttpClient(BuildOkHandler().Object);
 
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "token", null, BaseUrl, apiClient, default, null, null, httpOptions))
+            "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = apiClient, HttpOptions = httpOptions }))
         {
             Assert.That(apiClient.Timeout, Is.EqualTo(TimeSpan.FromSeconds(5)));
         }
@@ -103,7 +103,7 @@ public class TimeoutTests
         };
 
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "token", null, BaseUrl, apiClient))
+            "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = apiClient }))
         {
             Assert.That(apiClient.Timeout, Is.EqualTo(TimeSpan.FromSeconds(60)));
         }
@@ -121,7 +121,7 @@ public class TimeoutTests
         };
 
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            authHttpClient: authClient, httpOptions: httpOptions))
+            new ContaAzulApiClientOptions { AuthHttpClient = authClient, HttpOptions = httpOptions }))
         {
             Assert.That(authClient.Timeout, Is.EqualTo(TimeSpan.FromSeconds(10)));
         }
@@ -137,7 +137,7 @@ public class TimeoutTests
         };
 
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            authHttpClient: authClient))
+            new ContaAzulApiClientOptions { AuthHttpClient = authClient }))
         {
             Assert.That(authClient.Timeout, Is.EqualTo(TimeSpan.FromSeconds(45)));
         }
@@ -153,7 +153,7 @@ public class TimeoutTests
 
         using (var apiClient = new HttpClient(slowHandler.Object))
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            "token", null, BaseUrl, apiClient, default, null, null, httpOptions))
+            "token", null, new ContaAzulApiClientOptions { BaseUrl = BaseUrl, HttpClient = apiClient, HttpOptions = httpOptions }))
         {
             client.RetryOptions = RetryOptions.None;
             Assert.ThrowsAsync<TaskCanceledException>(
@@ -169,7 +169,7 @@ public class TimeoutTests
 
         using (var authClient = new HttpClient(slowAuthHandler.Object) { BaseAddress = new Uri(AuthBaseUrl) })
         using (var client = new ContaAzulApiClient(ClientId, ClientSecret,
-            authHttpClient: authClient, httpOptions: httpOptions))
+            new ContaAzulApiClientOptions { AuthHttpClient = authClient, HttpOptions = httpOptions }))
         {
             Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await client.AuthorizeAsync("code", "https://app.example.com/callback"));

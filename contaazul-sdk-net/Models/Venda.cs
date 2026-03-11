@@ -1,64 +1,46 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ContaAzul.Sdk.Net.Models
 {
-    public class Venda
+    public sealed class Venda
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("numero")]
+        [JsonPropertyName("numero")]
         public int Numero { get; set; }
 
-        [JsonProperty("data_emissao")]
+        [JsonPropertyName("data_emissao")]
         public string DataEmissao { get; set; }
 
-        [JsonProperty("situacao")]
+        [JsonPropertyName("situacao")]
         public string Situacao { get; set; }
 
-        [JsonProperty("tipo")]
+        [JsonPropertyName("tipo")]
         public string Tipo { get; set; }
 
-        [JsonProperty("origem")]
+        [JsonPropertyName("origem")]
         public string Origem { get; set; }
 
-        [JsonProperty("valor_total")]
+        [JsonPropertyName("valor_total")]
         public decimal ValorTotal { get; set; }
 
-        [JsonProperty("valor_desconto")]
+        [JsonPropertyName("valor_desconto")]
         public decimal ValorDesconto { get; set; }
 
-        [JsonProperty("valor_liquido")]
+        [JsonPropertyName("valor_liquido")]
         public decimal ValorLiquido { get; set; }
 
-        [JsonProperty("cliente")]
+        [JsonPropertyName("cliente")]
         public VendaCliente Cliente { get; set; }
 
-        [JsonProperty("vendedor")]
+        [JsonPropertyName("vendedor")]
         public VendaVendedor Vendedor { get; set; }
 
-        [JsonProperty("data_criacao")]
+        [JsonPropertyName("data_criacao")]
         public string DataCriacao { get; set; }
 
-        [JsonProperty("data_alteracao")]
+        [JsonPropertyName("data_alteracao")]
         public string DataAlteracao { get; set; }
-    }
-
-    public class VendaCliente
-    {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
-        [JsonProperty("nome")]
-        public string Nome { get; set; }
-    }
-
-    public class VendaVendedor
-    {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
-        [JsonProperty("nome")]
-        public string Nome { get; set; }
     }
 }
