@@ -43,43 +43,74 @@ namespace ContaAzul.Sdk.Net.Http
             }
         }
 
-        protected void SetAuthorizationHeader(string token)
+        private Func<string> _tokenProvider;
+
+        /// <summary>
+        /// Registers a callback that returns the current Bearer token at the moment each request
+        /// is dispatched. The token is injected as a per-request <c>Authorization</c> header so
+        /// token updates are reflected immediately without mutating shared <c>DefaultRequestHeaders</c>,
+        /// which is not thread-safe for concurrent writes.
+        /// </summary>
+        protected void SetTokenProvider(Func<string> tokenProvider)
         {
+            _tokenProvider = tokenProvider;
+        }
+
+        /// <summary>
+        /// Creates an <see cref="HttpRequestMessage"/> with the given method, endpoint, and optional
+        /// content, injecting the current Bearer token as a per-request <c>Authorization</c> header.
+        /// Per-request headers are local to the message and safe for concurrent use.
+        /// </summary>
+        private HttpRequestMessage CreateRequest(HttpMethod method, string endpoint, HttpContent content = null)
+        {
+            var request = new HttpRequestMessage(method, endpoint);
+
+            if (content != null)
+            {
+                request.Content = content;
+            }
+
+            var token = _tokenProvider?.Invoke();
             if (!string.IsNullOrWhiteSpace(token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
+
+            return request;
         }
 
         protected async Task<TResponse> CoreGetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.GetAsync(endpoint, cancellationToken).ConfigureAwait(false);
+            var request = CreateRequest(HttpMethod.Get, endpoint);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
         protected async Task<TResponse> CorePostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
-            var content = CreateJsonContent(data);
-            var response = await _httpClient.PostAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
+            var request = CreateRequest(HttpMethod.Post, endpoint, CreateJsonContent(data));
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
         protected async Task<TResponse> CorePutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
-            var content = CreateJsonContent(data);
-            var response = await _httpClient.PutAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
+            var request = CreateRequest(HttpMethod.Put, endpoint, CreateJsonContent(data));
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
         protected async Task<TResponse> CoreDeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.DeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
+            var request = CreateRequest(HttpMethod.Delete, endpoint);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
         protected async Task CoreDeleteAsync(string endpoint, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.DeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
+            var request = CreateRequest(HttpMethod.Delete, endpoint);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {

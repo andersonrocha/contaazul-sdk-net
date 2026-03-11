@@ -32,8 +32,8 @@ namespace ContaAzul.Sdk.Net
         private readonly HttpClient _authHttpClient;
         private readonly bool _disposeAuthClient;
         private readonly ILogger _logger;
-        private string _accessToken;
-        private string _refreshToken;
+        private volatile string _accessToken;
+        private volatile string _refreshToken;
         private DateTime _tokenExpiresAt;
 
         public string AccessToken => _accessToken;
@@ -144,10 +144,9 @@ namespace ContaAzul.Sdk.Net
                 _authHttpClient.Timeout = httpOptions.DefaultTimeout;
             }
 
-            if (!string.IsNullOrWhiteSpace(_accessToken))
-            {
-                SetAuthorizationHeader(_accessToken);
-            }
+            // B2: register a per-request token provider; the lambda reads _accessToken at dispatch
+            // time, avoiding any concurrent mutation of DefaultRequestHeaders.
+            SetTokenProvider(() => _accessToken);
 
             RetryOptions = options?.RetryOptions ?? new RetryOptions();
             RateLimitOptions = options?.RateLimitOptions ?? new RateLimitOptions();
@@ -273,6 +272,13 @@ namespace ContaAzul.Sdk.Net
 
                 var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(content, DefaultJsonOptions);
 
+                if (tokenResponse == null)
+                {
+                    throw new ContaAzulApiException(
+                        System.Net.HttpStatusCode.OK,
+                        "The token endpoint returned an empty or unrecognizable response.");
+                }
+
                 _logger?.LogInformation("Token obtained successfully. Expires in {ExpiresIn}s.", tokenResponse.ExpiresIn);
 
                 UpdateTokens(tokenResponse);
@@ -282,7 +288,9 @@ namespace ContaAzul.Sdk.Net
         }
 
         /// <summary>
-        /// Sets the access token to be used for API requests and updates the authorization header.
+        /// Sets the access token used for subsequent API requests.
+        /// The new value is picked up automatically by the per-request authorization header
+        /// injected on each outgoing call — no manual header mutation required.
         /// </summary>
         /// <param name="accessToken">The access token to set.</param>
         /// <param name="expiresIn">
@@ -298,8 +306,6 @@ namespace ContaAzul.Sdk.Net
             {
                 _tokenExpiresAt = DateTime.UtcNow.AddSeconds(expiresIn);
             }
-
-            SetAuthorizationHeader(_accessToken);
         }
 
         /// <summary>
@@ -472,8 +478,6 @@ namespace ContaAzul.Sdk.Net
             {
                 _tokenExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn);
             }
-
-            SetAuthorizationHeader(_accessToken);
 
             OnTokenRefreshed(new TokenRefreshedEventArgs(tokenResponse, _tokenExpiresAt));
         }
