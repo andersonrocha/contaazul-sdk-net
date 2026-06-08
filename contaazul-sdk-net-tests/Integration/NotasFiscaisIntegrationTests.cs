@@ -4,16 +4,19 @@ using ContaAzul.Sdk.Net.Models.NotasFiscais;
 namespace ContaAzul.Sdk.Net.Tests.Integration;
 
 [TestFixture]
+[Explicit("Teste de integração ao vivo: requer credenciais reais do ContaAzul.")]
+[Category("Integration")]
 public class NotasFiscaisIntegrationTests : IntegrationTestBase
 {
     [Test]
     public async Task ObterNotasFiscaisProduto_RetornaRespostaPaginada()
     {
+        // A API limita o intervalo a 15 dias (mesma regra da NFS-e).
         var resposta = await Client.NotasFiscais.ObterNotasFiscaisAsync(new NotaFiscalFiltro
         {
             Pagina = 1,
             TamanhoPagina = 10,
-            DataInicial = DataRelativa(-30),
+            DataInicial = DataRelativa(-15),
             DataFinal = DataRelativa(0)
         });
 

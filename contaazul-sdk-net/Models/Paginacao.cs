@@ -11,24 +11,28 @@ namespace ContaAzul.Sdk.Net.Models
         /// Número da página atual.
         /// </summary>
         [JsonPropertyName("pagina_atual")]
-        public int PaginaAtual { get; set; }
+        public long PaginaAtual { get; set; }
 
         /// <summary>
         /// Número total de páginas disponíveis.
         /// </summary>
         [JsonPropertyName("total_paginas")]
-        public int TotalPaginas { get; set; }
+        public long TotalPaginas { get; set; }
 
         /// <summary>
         /// Quantidade de itens por página.
+        /// <para>
+        /// Alguns endpoints retornam <see cref="long.MaxValue"/> como sentinela (sem limite),
+        /// por isso o tipo é <see cref="long"/>.
+        /// </para>
         /// </summary>
         [JsonPropertyName("tamanho_pagina")]
-        public int TamanhoPagina { get; set; }
+        public long TamanhoPagina { get; set; }
 
         /// <summary>
         /// Quantidade total de itens disponíveis.
         /// </summary>
         [JsonPropertyName("total_itens")]
-        public int TotalItens { get; set; }
+        public long TotalItens { get; set; }
     }
 }

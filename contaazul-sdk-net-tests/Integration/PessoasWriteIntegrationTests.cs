@@ -10,6 +10,8 @@ namespace ContaAzul.Sdk.Net.Tests.Integration;
 /// <c>CONTAAZUL_ALLOW_WRITE=true</c>. Criam um registro temporário e o removem ao final.
 /// </summary>
 [TestFixture]
+[Explicit("Teste de integração ao vivo (escrita): requer credenciais reais e ContaAzul:AllowWrite=true.")]
+[Category("Integration")]
 public class PessoasWriteIntegrationTests : IntegrationTestBase
 {
     [Test]

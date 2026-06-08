@@ -217,7 +217,17 @@ namespace ContaAzul.Sdk.Net.Http
             PropertyNameCaseInsensitive = true,
             // Optional fields left null on request bodies must be omitted, not serialized as
             // "field": null, so the API applies its own defaults (e.g. on contract creation).
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            // A API às vezes devolve inteiros como número decimal (ex.: 10.0) ou string;
+            // estes conversores tornam a leitura tolerante para evitar JsonException.
+            Converters =
+            {
+                new ContaAzul.Sdk.Net.Json.FlexibleInt32Converter(),
+                new ContaAzul.Sdk.Net.Json.FlexibleNullableInt32Converter(),
+                new ContaAzul.Sdk.Net.Json.FlexibleInt64Converter(),
+                new ContaAzul.Sdk.Net.Json.FlexibleNullableInt64Converter(),
+                new ContaAzul.Sdk.Net.Json.FlexibleNullableDateTimeConverter()
+            }
         };
 
         private HttpContent CreateJsonContent<T>(T data)

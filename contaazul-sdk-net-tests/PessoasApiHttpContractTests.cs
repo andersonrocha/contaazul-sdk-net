@@ -121,6 +121,24 @@ public class PessoasApiHttpContractTests
     }
 
     [Test]
+    public async Task WhenDataAlteracaoVemComoStringVaziaEntaoDesserializaComoNull()
+    {
+        // Caso real: a API devolve datas não preenchidas como string vazia ("").
+        var handler = new CapturingHandler(HttpStatusCode.OK,
+            "{\"id\":\"abc-123\",\"nome\":\"Fulano\",\"criado_em\":\"2026-06-08\",\"data_alteracao\":\"\"}");
+        using var client = BuildClient(handler);
+
+        var pessoa = await client.Pessoas.ObterPessoaPorIdAsync("abc-123");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pessoa.Id, Is.EqualTo("abc-123"));
+            Assert.That(pessoa.DataAlteracao, Is.Null);
+            Assert.That(pessoa.CriadoEm, Is.EqualTo("2026-06-08"));
+        });
+    }
+
+    [Test]
     public async Task WhenObterPessoaPorLegadoIdThenSendsGetToLegadoEndpoint()
     {
         var handler = new CapturingHandler(HttpStatusCode.OK, "{\"id\":\"abc-123\"}");

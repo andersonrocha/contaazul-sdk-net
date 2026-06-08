@@ -87,6 +87,30 @@ public class NotasFiscaisApiHttpContractTests
     }
 
     [Test]
+    public async Task WhenPaginacaoTemInteirosComoDecimalEntaoDesserializaSemErro()
+    {
+        // Casos reais da API de NF-e: inteiros como decimal (ex.: 1.0) e tamanho_pagina como
+        // sentinela Int64.MaxValue (sem limite). Ambos devem desserializar sem erro.
+        var handler = new CapturingHandler(HttpStatusCode.OK,
+            "{\"itens\":[],\"paginacao\":{\"pagina_atual\":1.0,\"total_paginas\":0,\"tamanho_pagina\":9223372036854775807,\"total_itens\":15.0}}");
+        using var client = BuildClient(handler);
+
+        var resposta = await client.NotasFiscais.ObterNotasFiscaisAsync(new NotaFiscalFiltro
+        {
+            DataInicial = "2024-01-01",
+            DataFinal = "2024-01-15"
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(resposta.Paginacao.PaginaAtual, Is.EqualTo(1));
+            Assert.That(resposta.Paginacao.TotalPaginas, Is.EqualTo(0));
+            Assert.That(resposta.Paginacao.TamanhoPagina, Is.EqualTo(long.MaxValue));
+            Assert.That(resposta.Paginacao.TotalItens, Is.EqualTo(15));
+        });
+    }
+
+    [Test]
     public void WhenObterNotasFiscaisWithNullFiltroThenThrowsArgumentNullException()
     {
         var handler = new CapturingHandler(HttpStatusCode.OK, "{}");

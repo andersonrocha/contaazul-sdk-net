@@ -4,6 +4,8 @@ using ContaAzul.Sdk.Net.Models.Contratos;
 namespace ContaAzul.Sdk.Net.Tests.Integration;
 
 [TestFixture]
+[Explicit("Teste de integração ao vivo: requer credenciais reais do ContaAzul.")]
+[Category("Integration")]
 public class ContratosIntegrationTests : IntegrationTestBase
 {
     [Test]
@@ -36,7 +38,7 @@ public class ContratosIntegrationTests : IntegrationTestBase
         var lista = await Client.Contratos.ListarContratosAsync(new ContratoFiltro
         {
             Pagina = 1,
-            TamanhoPagina = 1,
+            TamanhoPagina = 10,
             DataInicio = DataRelativa(-365),
             DataFim = DataRelativa(365)
         });

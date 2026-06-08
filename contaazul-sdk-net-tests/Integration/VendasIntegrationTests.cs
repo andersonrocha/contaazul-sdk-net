@@ -4,6 +4,8 @@ using ContaAzul.Sdk.Net.Models.Vendas;
 namespace ContaAzul.Sdk.Net.Tests.Integration;
 
 [TestFixture]
+[Explicit("Teste de integração ao vivo: requer credenciais reais do ContaAzul.")]
+[Category("Integration")]
 public class VendasIntegrationTests : IntegrationTestBase
 {
     [Test]
@@ -44,7 +46,7 @@ public class VendasIntegrationTests : IntegrationTestBase
         var lista = await Client.Vendas.GetVendasAsync(new VendaFiltro
         {
             Pagina = 1,
-            TamanhoPagina = 1,
+            TamanhoPagina = 10,
             DataInicio = DataRelativa(-90),
             DataFim = DataRelativa(0)
         });
