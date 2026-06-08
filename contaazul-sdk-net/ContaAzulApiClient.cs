@@ -61,7 +61,7 @@ namespace ContaAzul.Sdk.Net
         public RateLimitOptions RateLimitOptions { get; set; } = new RateLimitOptions();
 
         /// <summary>
-        /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
+        /// Raised after tokens are successfully updated ï¿½ either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
         /// <para>
         /// Subscribe to this event to persist the new <see cref="TokenRefreshedEventArgs.AccessToken"/>,
@@ -80,6 +80,7 @@ namespace ContaAzul.Sdk.Net
         public PessoasApi Pessoas { get; }
         public VendasApi Vendas { get; }
         public NotasFiscaisApi NotasFiscais { get; }
+        public ContratosApi Contratos { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContaAzulApiClient"/> class with stored tokens.
@@ -155,6 +156,7 @@ namespace ContaAzul.Sdk.Net
             Pessoas = new PessoasApi(this);
             Vendas = new VendasApi(this);
             NotasFiscais = new NotasFiscaisApi(this);
+            Contratos = new ContratosApi(this);
         }
 
         /// <summary>
@@ -288,7 +290,7 @@ namespace ContaAzul.Sdk.Net
         /// <summary>
         /// Sets the access token used for subsequent API requests.
         /// The new value is picked up automatically by the per-request authorization header
-        /// injected on each outgoing call — no manual header mutation required.
+        /// injected on each outgoing call â€” no manual header mutation required.
         /// </summary>
         /// <param name="accessToken">The access token to set.</param>
         /// <param name="expiresIn">
@@ -405,6 +407,45 @@ namespace ContaAzul.Sdk.Net
                     await CoreDeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
                     return true;
                 },
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends a POST request to the specified API endpoint without a request body and without
+        /// reading a response body. Intended for action endpoints (e.g. closing a contract) that
+        /// take no payload and return <c>204 No Content</c>.
+        /// Automatically retries the request if the access token is expired and can be refreshed.
+        /// </summary>
+        /// <param name="endpoint">The API endpoint to send the POST request to.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async Task PostAsync(string endpoint, CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            await ExecuteWithRetryAsync(
+                async () =>
+                {
+                    await CorePostAsync(endpoint, cancellationToken).ConfigureAwait(false);
+                    return true;
+                },
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends a GET request to the specified API endpoint and returns the raw response body as a
+        /// byte array. Intended for binary endpoints (e.g. PDF generation).
+        /// Automatically retries the request if the access token is expired and can be refreshed.
+        /// </summary>
+        /// <param name="endpoint">The API endpoint to send the GET request to.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>The raw response body bytes.</returns>
+        public async Task<byte[]> GetBytesAsync(string endpoint, CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            return await ExecuteWithRetryAsync(
+                async () => await CoreGetBytesAsync(endpoint, cancellationToken).ConfigureAwait(false),
                 cancellationToken
             ).ConfigureAwait(false);
         }

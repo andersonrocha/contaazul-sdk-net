@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ContaAzul.Sdk.Net.Helpers;
 using ContaAzul.Sdk.Net.Models;
+using ContaAzul.Sdk.Net.Models.NotasFiscais;
 
 namespace ContaAzul.Sdk.Net.Apis
 {

@@ -43,6 +43,9 @@ namespace ContaAzul.Sdk.Net
         /// <summary>Gets the Notas Fiscais API.</summary>
         NotasFiscaisApi NotasFiscais { get; }
 
+        /// <summary>Gets the Contratos (scheduled/recurring sales) API.</summary>
+        ContratosApi Contratos { get; }
+
         /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
@@ -92,6 +95,14 @@ namespace ContaAzul.Sdk.Net
         Task<TResponse> GetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Sends a GET request to the specified endpoint and returns the raw response body as bytes.
+        /// Intended for binary endpoints such as PDF generation.
+        /// </summary>
+        /// <param name="endpoint">The API endpoint.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        Task<byte[]> GetBytesAsync(string endpoint, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Sends a POST request to the specified endpoint and deserializes the response.
         /// </summary>
         /// <typeparam name="TRequest">The type of the request body.</typeparam>
@@ -100,6 +111,14 @@ namespace ContaAzul.Sdk.Net
         /// <param name="data">The request body data.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a POST request to the specified endpoint without a request or response body.
+        /// Intended for action endpoints that return <c>204 No Content</c>.
+        /// </summary>
+        /// <param name="endpoint">The API endpoint.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        Task PostAsync(string endpoint, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Sends a PUT request to the specified endpoint and deserializes the response.

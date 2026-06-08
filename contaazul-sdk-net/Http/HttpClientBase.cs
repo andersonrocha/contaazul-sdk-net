@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ContaAzul.Sdk.Net.Exceptions;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ContaAzul.Sdk.Net.Http
 {
@@ -101,6 +102,24 @@ namespace ContaAzul.Sdk.Net.Http
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Sends a GET request and returns the raw response body as a byte array.
+        /// Used for binary endpoints such as PDF generation.
+        /// </summary>
+        protected async Task<byte[]> CoreGetBytesAsync(string endpoint, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(HttpMethod.Get, endpoint);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ThrowApiException(response.StatusCode, content);
+            }
+
+            return await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        }
+
         protected async Task<TResponse> CorePostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
         {
             var request = CreateRequest(HttpMethod.Post, endpoint, CreateJsonContent(data));
@@ -145,9 +164,28 @@ namespace ContaAzul.Sdk.Net.Http
             }
         }
 
+        /// <summary>
+        /// Sends a POST request without a request body and without deserializing the response.
+        /// Used for action endpoints that take no payload and return <c>204 No Content</c>.
+        /// </summary>
+        protected async Task CorePostAsync(string endpoint, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(HttpMethod.Post, endpoint);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ThrowApiException(response.StatusCode, content);
+            }
+        }
+
         protected static readonly JsonSerializerOptions DefaultJsonOptions = new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            // Optional fields left null on request bodies must be omitted, not serialized as
+            // "field": null, so the API applies its own defaults (e.g. on contract creation).
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
         private HttpContent CreateJsonContent<T>(T data)
