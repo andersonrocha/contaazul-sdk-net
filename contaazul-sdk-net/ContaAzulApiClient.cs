@@ -61,7 +61,7 @@ namespace ContaAzul.Sdk.Net
         public RateLimitOptions RateLimitOptions { get; set; } = new RateLimitOptions();
 
         /// <summary>
-        /// Raised after tokens are successfully updated � either via <see cref="AuthorizeAsync"/>
+        /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
         /// <para>
         /// Subscribe to this event to persist the new <see cref="TokenRefreshedEventArgs.AccessToken"/>,
@@ -434,6 +434,29 @@ namespace ContaAzul.Sdk.Net
         }
 
         /// <summary>
+        /// Sends a POST request with the provided body to the specified API endpoint without reading
+        /// a response body. Intended for endpoints that return <c>204 No Content</c>.
+        /// Automatically retries the request if the access token is expired and can be refreshed.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request data to be sent.</typeparam>
+        /// <param name="endpoint">The API endpoint to send the POST request to.</param>
+        /// <param name="data">The data to send in the POST request body.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async Task PostAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            await ExecuteWithRetryAsync(
+                async () =>
+                {
+                    await CorePostAsync<TRequest>(endpoint, data, cancellationToken).ConfigureAwait(false);
+                    return true;
+                },
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Sends a GET request to the specified API endpoint and returns the raw response body as a
         /// byte array. Intended for binary endpoints (e.g. PDF generation).
         /// Automatically retries the request if the access token is expired and can be refreshed.
@@ -661,6 +684,29 @@ namespace ContaAzul.Sdk.Net
             ThrowIfDisposed();
             return await ExecuteWithRetryAsync(
                 async () => await CorePatchAsync<TRequest, TResponse>(endpoint, data, cancellationToken).ConfigureAwait(false),
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends a PATCH request with the provided body to the specified API endpoint without reading
+        /// a response body. Intended for endpoints that return <c>204 No Content</c>.
+        /// Automatically retries the request if the access token is expired and can be refreshed.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request data to be sent.</typeparam>
+        /// <param name="endpoint">The API endpoint to send the PATCH request to.</param>
+        /// <param name="data">The data to send in the PATCH request body.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async Task PatchAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            await ExecuteWithRetryAsync(
+                async () =>
+                {
+                    await CorePatchAsync<TRequest>(endpoint, data, cancellationToken).ConfigureAwait(false);
+                    return true;
+                },
                 cancellationToken
             ).ConfigureAwait(false);
         }

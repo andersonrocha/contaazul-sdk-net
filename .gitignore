@@ -417,3 +417,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Testes de integração ao vivo (não versionar segredos)
+appsettings.Integration.json

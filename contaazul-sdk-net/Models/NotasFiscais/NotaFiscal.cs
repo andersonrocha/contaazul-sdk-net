@@ -3,39 +3,32 @@ using System.Text.Json.Serialization;
 
 namespace ContaAzul.Sdk.Net.Models.NotasFiscais
 {
+    /// <summary>
+    /// Nota fiscal de produto (NF-e) emitida no ERP.
+    /// Retornada por <c>GET /v1/notas-fiscais</c>.
+    /// </summary>
     public sealed class NotaFiscal
     {
-        [JsonPropertyName("id")]
-        public string Id { get; set; }
+        /// <summary>Chave de acesso da nota fiscal.</summary>
+        [JsonPropertyName("chave_acesso")]
+        public string ChaveAcesso { get; set; }
 
-        [JsonPropertyName("numero")]
-        public string Numero { get; set; }
-
-        [JsonPropertyName("numero_rps")]
-        public int? NumeroRps { get; set; }
-
-        [JsonPropertyName("serie_rps")]
-        public string SerieRps { get; set; }
-
+        /// <summary>Data de emissão da nota fiscal.</summary>
         [JsonPropertyName("data_emissao")]
         public DateTime? DataEmissao { get; set; }
 
-        [JsonPropertyName("data_competencia")]
-        public DateTime? DataCompetencia { get; set; }
+        /// <summary>Nome do destinatário.</summary>
+        [JsonPropertyName("nome_destinatario")]
+        public string NomeDestinatario { get; set; }
 
+        /// <summary>Número da nota fiscal.</summary>
+        [JsonPropertyName("numero_nota")]
+        public int? NumeroNota { get; set; }
+
+        /// <summary>
+        /// Status da nota fiscal. Valores possíveis: <c>EMITIDA</c>, <c>CORRIGIDA_SUCESSO</c>.
+        /// </summary>
         [JsonPropertyName("status")]
         public string Status { get; set; }
-
-        [JsonPropertyName("tipo_negociacao")]
-        public string TipoNegociacao { get; set; }
-
-        [JsonPropertyName("id_cliente")]
-        public string IdCliente { get; set; }
-
-        [JsonPropertyName("numero_venda")]
-        public string NumeroVenda { get; set; }
-
-        [JsonPropertyName("valor_total")]
-        public decimal? ValorTotal { get; set; }
     }
 }

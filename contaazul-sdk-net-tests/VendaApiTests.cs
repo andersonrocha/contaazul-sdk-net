@@ -40,15 +40,15 @@ public class VendaApiTests
             Situacoes = "APROVADA",
             Tipos = "VENDA",
             Origens = "MANUAL",
-            Numeros = 123,
+            Numeros = "123",
             IdsCategorias = "cat1",
             IdsProdutos = "prod1",
             Pendente = true,
             Totais = "total",
-            IdsLegadoDonos = 1,
-            IdsLegadoClientes = 2,
-            IdsLegadoProdutos = 3,
-            IdsLegadoCategorias = 4
+            IdsLegadoDonos = "1",
+            IdsLegadoClientes = "2",
+            IdsLegadoProdutos = "3",
+            IdsLegadoCategorias = "4"
         };
 
         Assert.Multiple(() =>

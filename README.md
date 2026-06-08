@@ -13,7 +13,7 @@ SDK não oficial em .NET Standard 2.0 para integração com a API do ContaAzul.
 - ✅ Evento `TokenRefreshed` para persistência automática de tokens
 - ✅ API de Pessoas
 - ✅ API de Vendas
-- ✅ API de Notas Fiscais de Serviço
+- ✅ API de Notas Fiscais (produto/NF-e e serviço/NFS-e)
 - ✅ Suporte para .NET Standard 2.0
 - ✅ Totalmente assíncrono
 - ✅ Política de retry com backoff exponencial configurável
@@ -153,14 +153,14 @@ var filtro = new PessoaFiltro
     ComEndereco = true,
     Busca = "João"
 };
-var pessoas = await client.Pessoas.GetPessoasAsync(filtro);
+var pessoas = await client.Pessoas.ObterPessoasAsync(filtro);
 // Gera automaticamente: /v1/pessoas?pagina=1&tamanho_pagina=10&tipos_pessoa=FISICA&com_endereco=true&busca=Jo%C3%A3o
 
 Console.WriteLine($"Total de itens: {pessoas.TotalItems}");
 
 foreach (var pessoa in pessoas.Items)
 {
-    Console.WriteLine($"ID: {pessoa.Id}, Nome: {pessoa.Nome}, CPF/CNPJ: {pessoa.CpfCnpj}");
+    Console.WriteLine($"ID: {pessoa.Id}, Nome: {pessoa.Nome}, Documento: {pessoa.Documento}");
 }
 ```
 
@@ -174,6 +174,36 @@ foreach (var pessoa in pessoas.Items)
 - **Tipo**: `TiposPessoa`, `TipoPerfil`
 - **Datas**: `DataCriacaoInicio`, `DataCriacaoFim`, `DataAlteracaoDe`, `DataAlteracaoAte`
 - **Outros**: `ComEndereco`
+
+**Demais operações da `PessoasApi`:**
+
+```csharp
+// Detalhe por id (UUID) ou por id legado
+Pessoa pessoa = await client.Pessoas.ObterPessoaPorIdAsync("550e8400-e29b-41d4-a716-446655440000");
+Pessoa legada = await client.Pessoas.ObterPessoaPorLegadoIdAsync("12345");
+
+// Empresa conectada ao token
+Empresa empresa = await client.Pessoas.ObterEmpresaConectadaAsync();
+
+// Criar
+ResumoPessoa criada = await client.Pessoas.CriarPessoaAsync(new PessoaRequest
+{
+    Nome = "João Silva",
+    TipoPessoa = "Física",
+    Cpf = "123.456.789-00",
+    Perfis = new List<PerfilPessoa> { new PerfilPessoa { TipoPerfil = "Cliente" } }
+});
+
+// Atualização integral (PUT) e parcial (PATCH)
+await client.Pessoas.AtualizarPessoaAsync(criada.Id, new PessoaRequest { Nome = "João S.", TipoPessoa = "Física" });
+await client.Pessoas.AtualizarParcialmentePessoaAsync(criada.Id, new AtualizacaoParcialPessoa { Email = "novo@email.com" });
+
+// Operações em lote (ativar/inativar retornam o resultado; excluir retorna 204)
+var lote = new PessoasEmLoteRequest { Uuids = new List<string> { criada.Id } };
+await client.Pessoas.AtivarPessoasEmLoteAsync(lote);
+await client.Pessoas.InativarPessoasEmLoteAsync(lote);
+await client.Pessoas.ExcluirPessoasEmLoteAsync(lote);
+```
 
 ### 5. API de Vendas (VendasApi)
 
@@ -222,13 +252,15 @@ foreach (var venda in vendas.Itens)
 - **Outros**: `Numeros`, `Totais`
 - **Legados**: `IdsLegadoDonos`, `IdsLegadoClientes`, `IdsLegadoProdutos`, `IdsLegadoCategorias`
 
-### 6. API de Notas Fiscais de Serviço (NotasFiscaisApi)
+### 6. API de Notas Fiscais (NotasFiscaisApi)
 
-A API de Notas Fiscais é acessada através da propriedade `NotasFiscais` do cliente:
+A API de Notas Fiscais é acessada através da propriedade `NotasFiscais` do cliente e cobre
+notas de produto (NF-e), notas de serviço (NFS-e), vínculo a MDF-e e consulta de XML por chave:
 
 ```csharp
 using ContaAzul.Sdk.Net;
 using ContaAzul.Sdk.Net.Models;
+using ContaAzul.Sdk.Net.Models.NotasFiscais;
 
 var client = new ContaAzulApiClient(
     clientId: "seu-client-id",
@@ -236,8 +268,39 @@ var client = new ContaAzulApiClient(
 );
 
 await client.AuthorizeAsync(code, redirectUri);
+```
 
+#### 6.1. Notas fiscais de produto (NF-e)
+
+`DataInicial` e `DataFinal` (formato `YYYY-MM-DD`) são obrigatórios.
+
+```csharp
 var filtro = new NotaFiscalFiltro
+{
+    Pagina = 1,
+    TamanhoPagina = 10,
+    DataInicial = "2024-01-01",
+    DataFinal = "2024-01-15",
+    DocumentoTomador = "12345678900",
+    NumeroNota = "1234",
+    IdVenda = "550e8400-e29b-41d4-a716-446655440000"
+};
+
+RespostaPaginada<NotaFiscal> notas = await client.NotasFiscais.ObterNotasFiscaisAsync(filtro);
+
+Console.WriteLine($"Total: {notas.Paginacao?.TotalItens}");
+foreach (var nota in notas.Itens)
+{
+    Console.WriteLine($"NF-e #{nota.NumeroNota} - {nota.NomeDestinatario} - Status: {nota.Status}");
+}
+```
+
+#### 6.2. Notas fiscais de serviço (NFS-e)
+
+`DataCompetenciaDe` e `DataCompetenciaAte` são obrigatórios (intervalo máximo de 15 dias).
+
+```csharp
+var filtroServico = new NotaFiscalServicoFiltro
 {
     Pagina = 1,
     TamanhoPagina = 10,
@@ -245,28 +308,46 @@ var filtro = new NotaFiscalFiltro
     DataCompetenciaAte = "2024-01-15",
     IdCliente = "cliente-id",
     NumeroVenda = 1001,
-    Status = "PENDENTE",
+    Status = "EMITIDA",
     TipoNegociacao = "VENDA",
     NumeroNfseInicial = 100,
     NumeroNfseFinal = 200
 };
-var notasFiscais = await client.NotasFiscais.GetNotasFiscaisAsync(filtro);
 
-Console.WriteLine($"Total de notas fiscais: {notasFiscais.Paginacao?.TotalItens}");
+RespostaPaginada<NotaFiscalServico> servico =
+    await client.NotasFiscais.ObterNotasFiscaisServicoAsync(filtroServico);
 
-foreach (var nota in notasFiscais.Itens)
+foreach (var nfse in servico.Itens)
 {
-    Console.WriteLine($"NFS-e #{nota.Numero} - Status: {nota.Status} - Valor: R$ {nota.ValorTotal}");
+    Console.WriteLine($"NFS-e #{nfse.NumeroNfse} - Status: {nfse.Status} - R$ {nfse.ValorTotalNfse}");
 }
 ```
 
-**Filtros disponíveis em `NotaFiscalFiltro`:**
+#### 6.3. Vincular notas fiscais a um MDF-e
 
-- **Paginação**: `Pagina`, `TamanhoPagina`
-- **Datas**: `DataCompetenciaDe`, `DataCompetenciaAte`
-- **Identificadores**: `Ids`, `IdCliente`, `NumeroVenda`
-- **Numeração**: `NumeroNfseInicial`, `NumeroNfseFinal`, `NumeroRpsInicial`, `NumeroRpsFinal`
-- **Status**: `Status`, `TipoNegociacao`
+```csharp
+await client.NotasFiscais.VincularNotaFiscalMdfeAsync(new LinkNotaFiscalMdfe
+{
+    ChavesAcesso = new List<string>
+    {
+        "42250323643586000108550010000001151606401726",
+        "42250323643586000108550010000001141054498495"
+    },
+    Identificador = "345345",
+    Status = "ENCERRADO" // AUTORIZADO, ENCERRADO ou CANCELADO
+});
+```
+
+#### 6.4. Obter o XML de uma nota fiscal por chave
+
+```csharp
+string xml = await client.NotasFiscais.ObterNotaFiscalPorChaveAsync(
+    "42250323643586000108550010000001151606401726");
+```
+
+**Filtros de NF-e (`NotaFiscalFiltro`):** `Pagina`, `TamanhoPagina`, `DataInicial`*, `DataFinal`*, `DocumentoTomador`, `NumeroNota`, `IdVenda` (* obrigatórios).
+
+**Filtros de NFS-e (`NotaFiscalServicoFiltro`):** `Pagina`, `TamanhoPagina`, `DataCompetenciaDe`*, `DataCompetenciaAte`*, `Ids`, `IdCliente`, `NumeroVenda`, `NumeroNfseInicial`, `NumeroNfseFinal`, `NumeroRpsInicial`, `NumeroRpsFinal`, `Status`, `TipoNegociacao` (* obrigatórios).
 
 ## Injeção de Dependências
 
@@ -344,7 +425,7 @@ public class PessoaFiltro
 }
 
 var filtro = new PessoaFiltro { Pagina = 1, Busca = "João" };
-var pessoas = await client.Pessoas.GetPessoasAsync(filtro);
+var pessoas = await client.Pessoas.ObterPessoasAsync(filtro);
 // URL: /v1/pessoas?pagina=1&busca=Jo%C3%A3o
 ```
 
@@ -359,17 +440,25 @@ var pessoas = await client.Pessoas.GetPessoasAsync(filtro);
 
 - **`TokenResponse`**: Resposta do endpoint de autenticação OAuth2.
 - **`TokenRefreshedEventArgs`**: Argumentos do evento `TokenRefreshed` com os novos tokens e data de expiração.
-- **`Pessoa`**: Modelo de pessoa com todos os campos.
+- **`Pessoa`**: Cadastro completo de uma pessoa (detalhe por id).
+- **`ItemPessoaResumo`**: Item resumido retornado na listagem por filtro.
 - **`PessoaListResponse`**: Resposta da listagem de pessoas (`Items`, `TotalItems`).
 - **`PessoaFiltro`**: Filtros para busca de pessoas.
+- **`PessoaRequest`**: Dados para criar (POST) ou atualizar integralmente (PUT) uma pessoa.
+- **`AtualizacaoParcialPessoa`**: Dados para atualização parcial (PATCH).
+- **`ResumoPessoa`**: Resumo retornado ao criar/atualizar uma pessoa.
+- **`PessoasEmLoteRequest`** / **`StatusPessoasEmLoteResultado`**: Requisição e resultado das operações em lote.
+- **`Empresa`**: Dados da empresa conectada ao token.
+- **`EnderecoPessoa`**, **`InscricaoPessoa`**, **`OutroContatoPessoa`**, **`PerfilPessoa`**, **`ContatoCobrancaFaturamento`**: Submodelos unificados de pessoa.
 - **`Venda`**: Modelo de venda com todos os campos.
 - **`VendaListResponse`**: Resposta da listagem de vendas (`Itens`, `TotalItens`, `Totais`, `Quantidades`).
 - **`VendaFiltro`**: Filtros para busca de vendas (28 parâmetros disponíveis).
-- **`NotaFiscal`**: Modelo de nota fiscal de serviço.
-- **`NotaFiscalListResponse`**: Resposta da listagem de notas fiscais (`Itens`, `Paginacao`).
-- **`NotaFiscalFiltro`**: Filtros para busca de notas fiscais.
+- **`NotaFiscal`**: Modelo de nota fiscal de produto (NF-e).
+- **`NotaFiscalServico`**: Modelo de nota fiscal de serviço (NFS-e).
+- **`NotaFiscalFiltro`** / **`NotaFiscalServicoFiltro`**: Filtros de busca de NF-e e NFS-e.
+- **`LinkNotaFiscalMdfe`**: Dados para vincular notas fiscais a um MDF-e.
+- **`RespostaPaginada<T>`**: Resposta paginada genérica (`Itens`, `Paginacao`).
 - **`Paginacao`**: Informações de paginação (`PaginaAtual`, `TotalPaginas`, `TamanhoPagina`, `TotalItens`).
-- **`Endereco`**: Modelo de endereço.
 - **`ApiError`**: Modelo de erro retornado pela API.
 
 ### Exemplo de Uso Completo
@@ -388,7 +477,7 @@ client.TokenRefreshed += (_, args) =>
 await client.AuthorizeAsync(authCode, redirectUri);
 
 // 4. Usar a API de Pessoas
-var pessoas = await client.Pessoas.GetPessoasAsync();
+var pessoas = await client.Pessoas.ObterPessoasAsync();
 
 // 5. O token é compartilhado automaticamente entre todas as APIs
 Console.WriteLine($"Token atual: {client.AccessToken}");
@@ -412,7 +501,7 @@ client.TokenRefreshed += (_, args) =>
 
 ```csharp
 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-var pessoas = await client.Pessoas.GetPessoasAsync(null, cts.Token);
+var pessoas = await client.Pessoas.ObterPessoasAsync(null, cts.Token);
 ```
 
 ### 3. Tratamento de Erros
@@ -422,7 +511,7 @@ using ContaAzul.Sdk.Net.Exceptions;
 
 try
 {
-    var pessoas = await client.Pessoas.GetPessoasAsync();
+    var pessoas = await client.Pessoas.ObterPessoasAsync();
 }
 catch (ContaAzulException ex)
 {

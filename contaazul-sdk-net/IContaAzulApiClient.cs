@@ -121,6 +121,16 @@ namespace ContaAzul.Sdk.Net
         Task PostAsync(string endpoint, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Sends a POST request with a request body to the specified endpoint without reading a response body.
+        /// Intended for endpoints that take a payload and return <c>204 No Content</c>.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request body.</typeparam>
+        /// <param name="endpoint">The API endpoint.</param>
+        /// <param name="data">The request body data.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        Task PostAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Sends a PUT request to the specified endpoint and deserializes the response.
         /// </summary>
         /// <typeparam name="TRequest">The type of the request body.</typeparam>
@@ -139,6 +149,16 @@ namespace ContaAzul.Sdk.Net
         /// <param name="data">The request body data.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         Task<TResponse> PatchAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a PATCH request with a request body to the specified endpoint without reading a response body.
+        /// Intended for endpoints that take a payload and return <c>204 No Content</c>.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request body.</typeparam>
+        /// <param name="endpoint">The API endpoint.</param>
+        /// <param name="data">The request body data.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        Task PatchAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Sends a DELETE request to the specified endpoint and deserializes the response.

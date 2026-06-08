@@ -74,9 +74,9 @@ namespace ContaAzul.Sdk.Net.Models.Vendas
         [QueryParameter("origens")]
         public string Origens { get; set; }
 
-        /// <summary>Número da venda.</summary>
+        /// <summary>Números das vendas, separados por vírgula.</summary>
         [QueryParameter("numeros")]
-        public int? Numeros { get; set; }
+        public string Numeros { get; set; }
 
         /// <summary>IDs das categorias, separados por vírgula.</summary>
         [QueryParameter("ids_categorias")]
@@ -97,20 +97,20 @@ namespace ContaAzul.Sdk.Net.Models.Vendas
         [QueryParameter("totais")]
         public string Totais { get; set; }
 
-        /// <summary>ID legado dos donos.</summary>
+        /// <summary>IDs legados dos donos, separados por vírgula.</summary>
         [QueryParameter("ids_legado_donos")]
-        public int? IdsLegadoDonos { get; set; }
+        public string IdsLegadoDonos { get; set; }
 
-        /// <summary>ID legado dos clientes.</summary>
+        /// <summary>IDs legados dos clientes, separados por vírgula.</summary>
         [QueryParameter("ids_legado_clientes")]
-        public int? IdsLegadoClientes { get; set; }
+        public string IdsLegadoClientes { get; set; }
 
-        /// <summary>ID legado dos produtos.</summary>
+        /// <summary>IDs legados dos produtos, separados por vírgula.</summary>
         [QueryParameter("ids_legado_produtos")]
-        public int? IdsLegadoProdutos { get; set; }
+        public string IdsLegadoProdutos { get; set; }
 
-        /// <summary>ID legado das categorias.</summary>
+        /// <summary>IDs legados das categorias, separados por vírgula.</summary>
         [QueryParameter("ids_legado_categorias")]
-        public int? IdsLegadoCategorias { get; set; }
+        public string IdsLegadoCategorias { get; set; }
     }
 }

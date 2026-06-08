@@ -145,6 +145,22 @@ namespace ContaAzul.Sdk.Net.Http
             return await ProcessResponseAsync<TResponse>(response).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Sends a PATCH request with a request body but without deserializing the response.
+        /// Used for endpoints that take a payload and return <c>204 No Content</c>.
+        /// </summary>
+        protected async Task CorePatchAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(new HttpMethod("PATCH"), endpoint, CreateJsonContent(data));
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ThrowApiException(response.StatusCode, content);
+            }
+        }
+
         protected async Task<TResponse> CoreDeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
         {
             var request = CreateRequest(HttpMethod.Delete, endpoint);
@@ -171,6 +187,22 @@ namespace ContaAzul.Sdk.Net.Http
         protected async Task CorePostAsync(string endpoint, CancellationToken cancellationToken = default)
         {
             var request = CreateRequest(HttpMethod.Post, endpoint);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ThrowApiException(response.StatusCode, content);
+            }
+        }
+
+        /// <summary>
+        /// Sends a POST request with a request body but without deserializing the response.
+        /// Used for endpoints that take a payload and return <c>204 No Content</c>.
+        /// </summary>
+        protected async Task CorePostAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(HttpMethod.Post, endpoint, CreateJsonContent(data));
             var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)

@@ -9,18 +9,18 @@ namespace ContaAzul.Sdk.Net.Models.Vendas
     {
         /// <summary>Quantidade total de vendas.</summary>
         [JsonPropertyName("total")]
-        public int Total { get; set; }
+        public decimal Total { get; set; }
 
         /// <summary>Quantidade de vendas aprovadas.</summary>
         [JsonPropertyName("aprovado")]
-        public int Aprovado { get; set; }
+        public decimal Aprovado { get; set; }
 
         /// <summary>Quantidade de vendas canceladas.</summary>
         [JsonPropertyName("cancelado")]
-        public int Cancelado { get; set; }
+        public decimal Cancelado { get; set; }
 
         /// <summary>Quantidade de vendas esperando aprovação.</summary>
         [JsonPropertyName("esperando_aprovacao")]
-        public int EsperandoAprovacao { get; set; }
+        public decimal EsperandoAprovacao { get; set; }
     }
 }

@@ -25,6 +25,32 @@ public class NotasFiscaisApiTests
         {
             Pagina = 1,
             TamanhoPagina = 10,
+            DataInicial = "2024-01-01",
+            DataFinal = "2024-01-15",
+            DocumentoTomador = "12345678900",
+            NumeroNota = "1234",
+            IdVenda = "550e8400-e29b-41d4-a716-446655440000"
+        };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(filtro.Pagina, Is.EqualTo(1));
+            Assert.That(filtro.TamanhoPagina, Is.EqualTo(10));
+            Assert.That(filtro.DataInicial, Is.EqualTo("2024-01-01"));
+            Assert.That(filtro.DataFinal, Is.EqualTo("2024-01-15"));
+            Assert.That(filtro.DocumentoTomador, Is.EqualTo("12345678900"));
+            Assert.That(filtro.NumeroNota, Is.EqualTo("1234"));
+            Assert.That(filtro.IdVenda, Is.EqualTo("550e8400-e29b-41d4-a716-446655440000"));
+        });
+    }
+
+    [Test]
+    public void WhenCreateNotaFiscalServicoFiltroWithAllParametersThenAllPropertiesSet()
+    {
+        var filtro = new NotaFiscalServicoFiltro
+        {
+            Pagina = 1,
+            TamanhoPagina = 10,
             DataCompetenciaDe = "2024-01-01",
             DataCompetenciaAte = "2024-01-15",
             Ids = "id1,id2",

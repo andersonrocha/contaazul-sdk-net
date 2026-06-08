@@ -7,15 +7,27 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- ID dos User Secrets usados pelos testes de integração ao vivo. -->
+    <UserSecretsId>contaazul-sdk-net-integration-tests</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="NUnit" Version="4.2.2" />
     <PackageReference Include="NUnit.Analyzers" Version="4.4.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Template versionado (sem segredos). -->
+    <None Update="appsettings.Integration.template.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Arquivo real (no .gitignore): copiado para a saída apenas se existir. -->
+    <None Include="appsettings.Integration.json" Condition="Exists('appsettings.Integration.json')" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

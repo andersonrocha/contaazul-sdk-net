@@ -1,17 +1,17 @@
-# Exemplos de Uso AvanÁado - ContaAzul.Sdk.Net
+# Exemplos de Uso Avan√ßado - ContaAzul.Sdk.Net
 
-Este documento contÈm exemplos pr·ticos e avanÁados de uso do SDK ContaAzul.Sdk.Net.
+Este documento cont√©m exemplos pr√°ticos e avan√ßados de uso do SDK ContaAzul.Sdk.Net.
 
-## ?? Õndice
+## √çndice
 
-1. [ConfiguraÁ„o Inicial](#configuraÁ„o-inicial)
+1. [Configura√ß√£o Inicial](#configura√ß√£o-inicial)
 2. [Gerenciamento de Tokens](#gerenciamento-de-tokens)
 3. [Uso com Dependency Injection](#uso-com-dependency-injection)
-4. [PaginaÁ„o Autom·tica](#paginaÁ„o-autom·tica)
+4. [Pagina√ß√£o Autom√°tica](#pagina√ß√£o-autom√°tica)
 5. [Tratamento de Erros](#tratamento-de-erros)
 6. [Exemplos Completos](#exemplos-completos)
 
-## ConfiguraÁ„o Inicial
+## Configura√ß√£o Inicial
 
 ### Armazenamento Seguro de Tokens
 
@@ -127,7 +127,7 @@ public class ContaAzulAuthService
         if (tokens == null)
         {
             throw new InvalidOperationException(
-                "Tokens n„o encontrados. Execute o fluxo de autenticaÁ„o primeiro."
+                "Tokens n√£o encontrados. Execute o fluxo de autentica√ß√£o primeiro."
             );
         }
         
@@ -180,15 +180,15 @@ public void ConfigureServices(IServiceCollection services)
     });
 }
 
-// Interface do serviÁo
+// Interface do servi√ßo
 public interface IContaAzulService
 {
     Task<PessoaListResponse> GetPessoasAsync(PessoaFiltro filtro = null);
     Task<VendaListResponse> GetVendasAsync(VendaFiltro filtro = null);
-    Task<NotaFiscalListResponse> GetNotasFiscaisAsync(NotaFiscalFiltro filtro = null);
+    Task<RespostaPaginada<NotaFiscal>> GetNotasFiscaisAsync(NotaFiscalFiltro filtro);
 }
 
-// ImplementaÁ„o
+// Implementa√ß√£o
 public class ContaAzulService : IContaAzulService
 {
     private readonly ContaAzulApiClient _client;
@@ -200,7 +200,7 @@ public class ContaAzulService : IContaAzulService
     
     public async Task<PessoaListResponse> GetPessoasAsync(PessoaFiltro filtro = null)
     {
-        return await _client.Pessoas.GetPessoasAsync(filtro);
+        return await _client.Pessoas.ObterPessoasAsync(filtro);
     }
     
     public async Task<VendaListResponse> GetVendasAsync(VendaFiltro filtro = null)
@@ -208,9 +208,9 @@ public class ContaAzulService : IContaAzulService
         return await _client.Vendas.GetVendasAsync(filtro);
     }
     
-    public async Task<NotaFiscalListResponse> GetNotasFiscaisAsync(NotaFiscalFiltro filtro = null)
+    public async Task<RespostaPaginada<NotaFiscal>> GetNotasFiscaisAsync(NotaFiscalFiltro filtro)
     {
-        return await _client.NotasFiscais.GetNotasFiscaisAsync(filtro);
+        return await _client.NotasFiscais.ObterNotasFiscaisAsync(filtro);
     }
 }
 
@@ -242,9 +242,9 @@ public class PessoasController : ControllerBase
 }
 ```
 
-## PaginaÁ„o Autom·tica
+## Pagina√ß√£o Autom√°tica
 
-### Buscar Todos os Registros (Todas as P·ginas)
+### Buscar Todos os Registros (Todas as P√°ginas)
 
 ```csharp
 using System.Collections.Generic;
@@ -266,15 +266,15 @@ public class PaginacaoHelper
         {
             var filtro = filtroBase ?? new PessoaFiltro();
             filtro.Pagina = paginaAtual;
-            filtro.TamanhoPagina = 100; // M·ximo por p·gina
+            filtro.TamanhoPagina = 100; // M√°ximo por p√°gina
             
-            var resultado = await client.Pessoas.GetPessoasAsync(filtro);
+            var resultado = await client.Pessoas.ObterPessoasAsync(filtro);
             
             if (resultado.Data != null && resultado.Data.Count > 0)
             {
                 todasPessoas.AddRange(resultado.Data);
                 
-                // Verifica se h· mais p·ginas
+                // Verifica se h√° mais p√°ginas
                 continuar = paginaAtual < resultado.TotalPaginas;
                 paginaAtual++;
             }
@@ -297,7 +297,7 @@ var todasPessoas = await PaginacaoHelper.GetTodasPessoasAsync(client);
 Console.WriteLine($"Total de pessoas: {todasPessoas.Count}");
 ```
 
-### PaginaÁ„o com IAsyncEnumerable (.NET Core 3.0+)
+### Pagina√ß√£o com IAsyncEnumerable (.NET Core 3.0+)
 
 ```csharp
 public class PaginacaoAsyncHelper
@@ -315,7 +315,7 @@ public class PaginacaoAsyncHelper
             filtro.Pagina = paginaAtual;
             filtro.TamanhoPagina = 100;
             
-            var resultado = await client.Pessoas.GetPessoasAsync(filtro);
+            var resultado = await client.Pessoas.ObterPessoasAsync(filtro);
             
             if (resultado.Data != null && resultado.Data.Count > 0)
             {
@@ -345,7 +345,7 @@ await foreach (var pessoa in PaginacaoAsyncHelper.GetPessoasAsyncEnumerable(clie
     Console.WriteLine($"{pessoa.Id} - {pessoa.Nome}");
     
     // Processar cada pessoa individualmente
-    // ⁄til para grandes volumes de dados
+    // √∫til para grandes volumes de dados
 }
 ```
 
@@ -369,7 +369,7 @@ public class ContaAzulResilientService
     {
         _client = client;
         
-        // PolÌtica de retry com exponential backoff
+        // Pol√≠tica de retry com exponential backoff
         _retryPolicy = Policy<PessoaListResponse>
             .Handle<HttpRequestException>()
             .WaitAndRetryAsync(
@@ -377,7 +377,7 @@ public class ContaAzulResilientService
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    Console.WriteLine($"Tentativa {retryCount} apÛs {timespan.TotalSeconds}s");
+                    Console.WriteLine($"Tentativa {retryCount} ap√≥s {timespan.TotalSeconds}s");
                 }
             );
     }
@@ -386,7 +386,7 @@ public class ContaAzulResilientService
     {
         return await _retryPolicy.ExecuteAsync(async () =>
         {
-            return await _client.Pessoas.GetPessoasAsync(filtro);
+            return await _client.Pessoas.ObterPessoasAsync(filtro);
         });
     }
 }
@@ -405,36 +405,36 @@ public class ContaAzulServiceWithErrorHandling
     {
         try
         {
-            var pessoas = await _client.Pessoas.GetPessoasAsync(filtro);
+            var pessoas = await _client.Pessoas.ObterPessoasAsync(filtro);
             return Result<PessoaListResponse>.Success(pessoas);
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("401"))
         {
-            _logger.LogWarning("Token inv·lido ou expirado. Tentando renovar...");
+            _logger.LogWarning("Token inv√°lido ou expirado. Tentando renovar...");
             
             try
             {
                 await _client.RefreshTokenAsync();
-                var pessoas = await _client.Pessoas.GetPessoasAsync(filtro);
+                var pessoas = await _client.Pessoas.ObterPessoasAsync(filtro);
                 return Result<PessoaListResponse>.Success(pessoas);
             }
             catch (Exception refreshEx)
             {
                 _logger.LogError(refreshEx, "Falha ao renovar token");
                 return Result<PessoaListResponse>.Failure(
-                    "N„o foi possÌvel renovar o token. ReautenticaÁ„o necess·ria."
+                    "N√£o foi poss√≠vel renovar o token. Reautentica√ß√£o necess√°ria."
                 );
             }
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("429"))
         {
             _logger.LogWarning("Rate limit atingido");
-            return Result<PessoaListResponse>.Failure("Muitas requisiÁıes. Tente novamente mais tarde.");
+            return Result<PessoaListResponse>.Failure("Muitas requisi√ß√µes. Tente novamente mais tarde.");
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Erro na requisiÁ„o HTTP");
-            return Result<PessoaListResponse>.Failure($"Erro na comunicaÁ„o: {ex.Message}");
+            _logger.LogError(ex, "Erro na requisi√ß√£o HTTP");
+            return Result<PessoaListResponse>.Failure($"Erro na comunica√ß√£o: {ex.Message}");
         }
         catch (Exception ex)
         {
@@ -465,7 +465,7 @@ public class Result<T>
 
 ## Exemplos Completos
 
-### SincronizaÁ„o de Clientes do ContaAzul para Banco Local
+### Sincroniza√ß√£o de Clientes do ContaAzul para Banco Local
 
 ```csharp
 using System;
@@ -481,7 +481,7 @@ public class SincronizacaoService
     
     public async Task SincronizarClientesAsync()
     {
-        Console.WriteLine("Iniciando sincronizaÁ„o de clientes...");
+        Console.WriteLine("Iniciando sincroniza√ß√£o de clientes...");
         
         var filtro = new PessoaFiltro
         {
@@ -495,7 +495,7 @@ public class SincronizacaoService
         while (true)
         {
             filtro.Pagina = paginaAtual;
-            var resultado = await _client.Pessoas.GetPessoasAsync(filtro);
+            var resultado = await _client.Pessoas.ObterPessoasAsync(filtro);
             
             if (resultado.Data == null || !resultado.Data.Any())
                 break;
@@ -532,7 +532,7 @@ public class SincronizacaoService
             
             await _dbContext.SaveChangesAsync();
             
-            Console.WriteLine($"P·gina {paginaAtual}/{resultado.TotalPaginas} - {totalSincronizados} clientes sincronizados");
+            Console.WriteLine($"P√°gina {paginaAtual}/{resultado.TotalPaginas} - {totalSincronizados} clientes sincronizados");
             
             if (paginaAtual >= resultado.TotalPaginas)
                 break;
@@ -541,12 +541,12 @@ public class SincronizacaoService
             await Task.Delay(200); // Evitar rate limiting
         }
         
-        Console.WriteLine($"SincronizaÁ„o concluÌda! Total: {totalSincronizados} clientes");
+        Console.WriteLine($"Sincroniza√ß√£o conclu√≠da! Total: {totalSincronizados} clientes");
     }
 }
 ```
 
-### RelatÛrio de Vendas com ExportaÁ„o
+### Relat√≥rio de Vendas com Exporta√ß√£o
 
 ```csharp
 public class RelatorioVendasService
@@ -568,7 +568,7 @@ public class RelatorioVendasService
         var todasVendas = new List<Venda>();
         var paginaAtual = 1;
         
-        // Buscar todas as vendas do perÌodo
+        // Buscar todas as vendas do per√≠odo
         while (true)
         {
             filtro.Pagina = paginaAtual;
@@ -587,7 +587,7 @@ public class RelatorioVendasService
         
         // Gerar CSV
         var csv = new StringBuilder();
-        csv.AppendLine("N˙mero,Data,Cliente,Valor Total,SituaÁ„o");
+        csv.AppendLine("N√∫mero,Data,Cliente,Valor Total,Situa√ß√£o");
         
         foreach (var venda in todasVendas)
         {
@@ -601,4 +601,4 @@ public class RelatorioVendasService
 
 ---
 
-Para mais exemplos e documentaÁ„o, visite: https://github.com/andersonrocha/contaazul-dotnet
+Para mais exemplos e documenta√ß√£o, visite: https://github.com/andersonrocha/contaazul-dotnet

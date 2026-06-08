@@ -2,39 +2,32 @@ using ContaAzul.Sdk.Net.Attributes;
 
 namespace ContaAzul.Sdk.Net.Models.NotasFiscais
 {
+    /// <summary>
+    /// Filtros para consulta de notas fiscais de produto (NF-e) — <c>GET /v1/notas-fiscais</c>.
+    /// <para>
+    /// <see cref="DataInicial"/> e <see cref="DataFinal"/> são obrigatórios pela API.
+    /// </para>
+    /// </summary>
     public class NotaFiscalFiltro : FiltroBase
     {
-        [QueryParameter("data_competencia_de")]
-        public string DataCompetenciaDe { get; set; }
+        /// <summary>Data inicial no formato <c>YYYY-MM-DD</c>. Obrigatório.</summary>
+        [QueryParameter("data_inicial")]
+        public string DataInicial { get; set; }
 
-        [QueryParameter("data_competencia_ate")]
-        public string DataCompetenciaAte { get; set; }
+        /// <summary>Data final no formato <c>YYYY-MM-DD</c>. Obrigatório.</summary>
+        [QueryParameter("data_final")]
+        public string DataFinal { get; set; }
 
-        [QueryParameter("ids")]
-        public string Ids { get; set; }
+        /// <summary>Documento do tomador (ex.: CPF/CNPJ).</summary>
+        [QueryParameter("documento_tomador")]
+        public string DocumentoTomador { get; set; }
 
-        [QueryParameter("id_cliente")]
-        public string IdCliente { get; set; }
+        /// <summary>Número da nota fiscal.</summary>
+        [QueryParameter("numero_nota")]
+        public string NumeroNota { get; set; }
 
-        [QueryParameter("numero_venda")]
-        public int? NumeroVenda { get; set; }
-
-        [QueryParameter("numero_nfse_inicial")]
-        public int? NumeroNfseInicial { get; set; }
-
-        [QueryParameter("numero_nfse_final")]
-        public int? NumeroNfseFinal { get; set; }
-
-        [QueryParameter("numero_rps_inicial")]
-        public int? NumeroRpsInicial { get; set; }
-
-        [QueryParameter("numero_rps_final")]
-        public int? NumeroRpsFinal { get; set; }
-
-        [QueryParameter("status")]
-        public string Status { get; set; }
-
-        [QueryParameter("tipo_negociacao")]
-        public string TipoNegociacao { get; set; }
+        /// <summary>ID da venda (UUID).</summary>
+        [QueryParameter("id_venda")]
+        public string IdVenda { get; set; }
     }
 }

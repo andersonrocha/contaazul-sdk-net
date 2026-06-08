@@ -25,15 +25,15 @@ namespace ContaAzul.Sdk.Net.Models.Contratos
 
         /// <summary>Dia do mês para emissão da venda. (Detalhe)</summary>
         [JsonPropertyName("dia_emissao_venda")]
-        public int DiaEmissaoVenda { get; set; }
+        public int? DiaEmissaoVenda { get; set; }
 
         /// <summary>Intervalo entre as cobranças (ex.: a cada 1 mês). (Detalhe)</summary>
         [JsonPropertyName("intervalo_frequencia")]
-        public int IntervaloFrequencia { get; set; }
+        public int? IntervaloFrequencia { get; set; }
 
         /// <summary>Número do contrato. (Detalhe)</summary>
         [JsonPropertyName("numero")]
-        public int Numero { get; set; }
+        public int? Numero { get; set; }
 
         /// <summary>Tipo de expiração (ex.: <c>DATA</c>, <c>VEZES</c>, <c>NUNCA</c>).</summary>
         [JsonPropertyName("tipo_expiracao")]
@@ -48,10 +48,10 @@ namespace ContaAzul.Sdk.Net.Models.Contratos
 
         /// <summary>Número de cobranças já realizadas. (Listagem)</summary>
         [JsonPropertyName("vigencia_atual")]
-        public int VigenciaAtual { get; set; }
+        public int? VigenciaAtual { get; set; }
 
         /// <summary>Total de cobranças previstas. (Listagem)</summary>
         [JsonPropertyName("vigencia_total")]
-        public int VigenciaTotal { get; set; }
+        public int? VigenciaTotal { get; set; }
     }
 }
