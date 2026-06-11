@@ -5,7 +5,11 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [1.0.0] - 2024-01-XX
+## [0.1.0] - Não lançado
+
+> Desenvolvimento inicial (major `0`): a API pública ainda pode mudar entre versões `0.x`.
+> 4 das 11 APIs do ContaAzul estão implementadas; as demais virão nas próximas versões `0.x`.
+> A `1.0.0` será publicada quando todas as APIs estiverem prontas e a superfície pública estável.
 
 ### Adicionado
 - Implementação inicial do SDK ContaAzul para .NET

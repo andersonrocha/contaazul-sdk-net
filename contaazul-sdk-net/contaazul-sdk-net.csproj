@@ -1,36 +1,46 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ContaAzul.Sdk.Net</RootNamespace>
+    <LangVersion>latest</LangVersion>
 
     <!-- Package Information -->
     <PackageId>ContaAzul.Sdk.Net</PackageId>
-    <Version>1.0.0</Version>
+    <Version>0.1.0</Version>
     <Authors>Anderson Rocha</Authors>
     <Company>ContaAzul SDK</Company>
-    <Description>SDK não oficial em .NET para integração com a API ContaAzul. Facilita a integração com recursos como Pessoas, Vendas e Notas Fiscais de Serviço.</Description>
-    <PackageTags>contaazul;api;sdk;dotnet;netstandard;integration;erp</PackageTags>
-    <PackageProjectUrl>https://github.com/andersonrocha/contaazul-dotnet</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/andersonrocha/contaazul-dotnet</RepositoryUrl>
+    <Description>SDK não oficial em .NET (netstandard2.0) para integração com a API do ContaAzul. Cobre as APIs de Pessoas, Vendas, Contratos e Notas Fiscais (NF-e e NFS-e), com autenticação OAuth2, refresh automático de token, retry com backoff, rate limiting e desserialização resiliente.</Description>
+    <PackageTags>contaazul;api;sdk;dotnet;netstandard;integration;erp;nfe;nfse;oauth2</PackageTags>
+    <PackageProjectUrl>https://github.com/andersonrocha/contaazul-sdk-net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/andersonrocha/contaazul-sdk-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>
-      v1.0.0:
-      - Implementação inicial do SDK
-      - Suporte para API de Pessoas
-      - Suporte para API de Vendas
-      - Suporte para API de Notas Fiscais de Serviço
-      - Sistema de autenticação OAuth2
-      - Refresh automático de token
+      v0.1.0 (desenvolvimento inicial — API pública ainda pode mudar):
+      - API de Pessoas (CRUD completo, listagem, ativação/inativação/exclusão em lote, empresa conectada)
+      - API de Vendas (busca, detalhe, criação, edição, itens, exclusão em lote, PDF)
+      - API de Contratos (listagem, detalhe, criação, encerramento, remoção)
+      - API de Notas Fiscais (NF-e de produto e NFS-e de serviço, vínculo MDF-e, XML por chave)
+      - Autenticação OAuth2 com refresh automático e rotação de token
+      - Retry com backoff exponencial e rate limiting configuráveis
+      - Desserialização resiliente (inteiros como decimal, sentinelas Int64, datas vazias)
+      - Demais APIs do ContaAzul serão adicionadas nas próximas versões 0.x.
     </PackageReleaseNotes>
-    
+
     <!-- Build Configuration -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Não falhar/poluir por membros públicos sem doc XML (ex.: conversores, helpers protegidos). -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Source Link / build determinístico para um pacote público de qualidade. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,10 +50,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Text.Json" Version="10.0.4" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,4 +62,3 @@
   </ItemGroup>
 
 </Project>
-
