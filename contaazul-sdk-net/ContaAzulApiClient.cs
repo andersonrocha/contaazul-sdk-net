@@ -81,6 +81,9 @@ namespace ContaAzul.Sdk.Net
         public VendasApi Vendas { get; }
         public NotasFiscaisApi NotasFiscais { get; }
         public ContratosApi Contratos { get; }
+        public CobrancasApi Cobrancas { get; }
+        public BaixasApi Baixas { get; }
+        public FinanceiroApi Financeiro { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContaAzulApiClient"/> class with stored tokens.
@@ -157,6 +160,9 @@ namespace ContaAzul.Sdk.Net
             Vendas = new VendasApi(this);
             NotasFiscais = new NotasFiscaisApi(this);
             Contratos = new ContratosApi(this);
+            Cobrancas = new CobrancasApi(this);
+            Baixas = new BaixasApi(this);
+            Financeiro = new FinanceiroApi(this);
         }
 
         /// <summary>

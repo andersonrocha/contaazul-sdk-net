@@ -5,9 +5,21 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [0.1.0] - Não lançado
+## [0.2.0] - Não lançado
 
 > Desenvolvimento inicial (major `0`): a API pública ainda pode mudar entre versões `0.x`.
+
+### Adicionado
+- API de Cobranças (`CobrancasApi`): gerar, consultar e cancelar cobranças
+- API de Baixas (`BaixasApi`): criar, listar, consultar, atualizar e excluir baixas de parcelas
+- API de Financeiro (`FinanceiroApi`): centros de custo, categorias, categorias DRE, contas
+  financeiras, saldo atual, transferências, contas a pagar/receber, parcelas, eventos
+  alterados e saldos iniciais
+- Modelos financeiros unificados (`ComposicaoValorFinanceiro`, `RespostaItens<T>`,
+  `ContaPagarReceber`) para evitar duplicação
+
+## [0.1.0] - Não lançado
+
 > 4 das 11 APIs do ContaAzul estão implementadas; as demais virão nas próximas versões `0.x`.
 > A `1.0.0` será publicada quando todas as APIs estiverem prontas e a superfície pública estável.
 

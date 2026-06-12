@@ -5,3 +5,4 @@ global using ContaAzul.Sdk.Net.Models.Vendas;
 global using ContaAzul.Sdk.Net.Models.Contratos;
 global using ContaAzul.Sdk.Net.Models.Pessoas;
 global using ContaAzul.Sdk.Net.Models.NotasFiscais;
+global using ContaAzul.Sdk.Net.Models.Financeiro;

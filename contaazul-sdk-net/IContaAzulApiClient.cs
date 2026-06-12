@@ -46,6 +46,15 @@ namespace ContaAzul.Sdk.Net
         /// <summary>Gets the Contratos (scheduled/recurring sales) API.</summary>
         ContratosApi Contratos { get; }
 
+        /// <summary>Gets the Cobranças (charge) API.</summary>
+        CobrancasApi Cobrancas { get; }
+
+        /// <summary>Gets the Baixas (acquittance) API.</summary>
+        BaixasApi Baixas { get; }
+
+        /// <summary>Gets the Financeiro (financial) API.</summary>
+        FinanceiroApi Financeiro { get; }
+
         /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.

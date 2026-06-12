@@ -7,7 +7,7 @@
 
     <!-- Package Information -->
     <PackageId>ContaAzul.Sdk.Net</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Anderson Rocha</Authors>
     <Company>ContaAzul SDK</Company>
     <Description>SDK não oficial em .NET (netstandard2.0) para integração com a API do ContaAzul. Cobre as APIs de Pessoas, Vendas, Contratos e Notas Fiscais (NF-e e NFS-e), com autenticação OAuth2, refresh automático de token, retry com backoff, rate limiting e desserialização resiliente.</Description>
@@ -18,6 +18,12 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>
+      v0.2.0 (desenvolvimento inicial — API pública ainda pode mudar):
+      - API de Cobranças (gerar, consultar e cancelar cobranças)
+      - API de Baixas (criar, listar, consultar, atualizar e excluir baixas de parcelas)
+      - API de Financeiro (centros de custo, categorias, categorias DRE, contas financeiras,
+        saldos, transferências, contas a pagar/receber, parcelas e eventos alterados)
+
       v0.1.0 (desenvolvimento inicial — API pública ainda pode mudar):
       - API de Pessoas (CRUD completo, listagem, ativação/inativação/exclusão em lote, empresa conectada)
       - API de Vendas (busca, detalhe, criação, edição, itens, exclusão em lote, PDF)
