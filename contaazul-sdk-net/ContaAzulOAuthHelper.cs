@@ -55,13 +55,13 @@ namespace ContaAzul.Sdk.Net
             // corretamente; ele espera o redirect_uri literal. Os caracteres ":" e "/" são
             // permitidos no componente de query (RFC 3986), então a URL continua válida.
             // (Não passe um redirect_uri que contenha "&", "#" ou query string própria.)
-            // Os espaços do scope continuam codificados como %20, pois espaços não são válidos
-            // em uma URL e o Cognito (auth do ContaAzul) os aceita assim.
+            // Os espaços que separam os scopes são enviados como "+" (formato esperado pelo
+            // ContaAzul), e não como "%20". Demais caracteres especiais continuam codificados.
             var query = $"response_type=code"
                       + $"&client_id={Uri.EscapeDataString(clientId)}"
                       + $"&redirect_uri={redirectUri}"
                       + $"&state={Uri.EscapeDataString(state)}"
-                      + $"&scope={Uri.EscapeDataString(scope)}";
+                      + $"&scope={Uri.EscapeDataString(scope).Replace("%20", "+")}";
 
             return $"{AuthBaseUrl}/oauth2/authorize?{query}";
         }
