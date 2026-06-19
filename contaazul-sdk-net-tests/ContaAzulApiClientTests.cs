@@ -336,7 +336,7 @@ public class ContaAzulApiClientTests
             Assert.That(result, Does.StartWith("https://auth.contaazul.com/oauth2/authorize?"));
             Assert.That(result, Does.Contain("response_type=code"));
             Assert.That(result, Does.Contain($"client_id={Uri.EscapeDataString(clientId)}"));
-            Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
+            Assert.That(result, Does.Contain($"redirect_uri={redirectUri}"));
             Assert.That(result, Does.Contain($"state={Uri.EscapeDataString(state)}"));
             Assert.That(result, Does.Contain("scope=openid%20profile%20aws.cognito.signin.user.admin"));
         });
@@ -369,16 +369,22 @@ public class ContaAzulApiClientTests
     }
 
     [Test]
-    public void WhenBuildAuthorizationUrlWithSpecialCharactersInRedirectUriThenEncodesCorrectly()
+    public void WhenBuildAuthorizationUrlThenRedirectUriIsLiteralWithoutPercentEncode()
     {
+        // O ContaAzul espera o redirect_uri literal (sem %3A/%2F). ":" e "/" são válidos no query.
         var clientId = "test-client-id";
-        var redirectUri = "https://example.com/callback?param=value&other=test";
+        var redirectUri = "https://x509lbwb-90.brs.devtunnels.ms/api/integracoes/contaazul/callback";
         var state = "state-123";
         var scope = "openid";
 
         var result = ContaAzulApiClient.BuildAuthorizationUrl(clientId, redirectUri, state, scope);
 
-        Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Does.Contain($"redirect_uri={redirectUri}"));
+            Assert.That(result, Does.Not.Contain("%2F"));
+            Assert.That(result, Does.Not.Contain("%3A"));
+        });
     }
 
     [Test]
@@ -612,14 +618,15 @@ public class ContaAzulApiClientTests
     public void WhenBuildAuthorizationUrlWithCustomPortInRedirectUriThenSucceeds()
     {
         var redirectUri = "https://example.com:8443/callback";
-        
+
         var result = ContaAzulApiClient.BuildAuthorizationUrl(
             "test-client-id",
             redirectUri,
             "state-123",
             "openid");
 
-        Assert.That(result, Does.Contain(Uri.EscapeDataString(redirectUri)));
+        // redirect_uri é literal (sem percent-encode), inclusive a porta.
+        Assert.That(result, Does.Contain($"redirect_uri={redirectUri}"));
     }
 
     [Test]

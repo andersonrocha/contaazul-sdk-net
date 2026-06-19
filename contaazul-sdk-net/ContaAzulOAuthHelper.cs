@@ -50,9 +50,16 @@ namespace ContaAzul.Sdk.Net
                 throw new ArgumentException("redirectUri must be a valid absolute URL.", nameof(redirectUri));
             }
 
+            // O redirect_uri é enviado SEM percent-encode. Embora o encode (ex.: "%3A%2F%2F")
+            // seja o padrão OAuth2, o servidor de autorização do ContaAzul não o interpreta
+            // corretamente; ele espera o redirect_uri literal. Os caracteres ":" e "/" são
+            // permitidos no componente de query (RFC 3986), então a URL continua válida.
+            // (Não passe um redirect_uri que contenha "&", "#" ou query string própria.)
+            // Os espaços do scope continuam codificados como %20, pois espaços não são válidos
+            // em uma URL e o Cognito (auth do ContaAzul) os aceita assim.
             var query = $"response_type=code"
                       + $"&client_id={Uri.EscapeDataString(clientId)}"
-                      + $"&redirect_uri={Uri.EscapeDataString(redirectUri)}"
+                      + $"&redirect_uri={redirectUri}"
                       + $"&state={Uri.EscapeDataString(state)}"
                       + $"&scope={Uri.EscapeDataString(scope)}";
 

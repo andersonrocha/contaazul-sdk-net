@@ -5,6 +5,12 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.2.1] - Não lançado
+
+### Corrigido
+- `BuildAuthorizationUrl` agora envia o `redirect_uri` literal (sem percent-encode de `:`/`/`),
+  formato que o servidor de autorização do ContaAzul interpreta corretamente.
+
 ## [0.2.0] - Não lançado
 
 > Desenvolvimento inicial (major `0`): a API pública ainda pode mudar entre versões `0.x`.

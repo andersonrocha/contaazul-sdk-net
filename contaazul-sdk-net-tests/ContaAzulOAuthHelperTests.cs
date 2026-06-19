@@ -28,7 +28,7 @@ public class ContaAzulOAuthHelperTests
             Assert.That(result, Does.StartWith("https://auth.contaazul.com/oauth2/authorize?"));
             Assert.That(result, Does.Contain("response_type=code"));
             Assert.That(result, Does.Contain($"client_id={Uri.EscapeDataString(clientId)}"));
-            Assert.That(result, Does.Contain($"redirect_uri={Uri.EscapeDataString(redirectUri)}"));
+            Assert.That(result, Does.Contain($"redirect_uri={redirectUri}"), "redirect_uri deve ser literal (sem percent-encode).");
             Assert.That(result, Does.Contain($"state={Uri.EscapeDataString(state)}"));
             Assert.That(result, Does.Contain("scope=openid%20profile%20aws.cognito.signin.user.admin"));
         });
