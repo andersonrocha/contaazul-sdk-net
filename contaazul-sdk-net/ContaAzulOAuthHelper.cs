@@ -20,7 +20,8 @@ namespace ContaAzul.Sdk.Net
         /// </summary>
         /// <param name="clientId">The OAuth 2.0 client ID.</param>
         /// <param name="redirectUri">
-        /// The redirect URI registered for the application. Must be a valid absolute URL.
+        /// The redirect URI registered for the application. Must be a valid absolute
+        /// HTTP/HTTPS URL.
         /// </param>
         /// <param name="state">
         /// An opaque value used to maintain state between the request and the callback.
@@ -36,7 +37,7 @@ namespace ContaAzul.Sdk.Net
         /// <paramref name="state"/> or <paramref name="scope"/> is <see langword="null"/> or whitespace.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="redirectUri"/> is not a valid absolute URL.
+        /// Thrown when <paramref name="redirectUri"/> is not a valid absolute HTTP/HTTPS URL.
         /// </exception>
         public static string BuildAuthorizationUrl(string clientId, string redirectUri, string state, string scope)
         {
@@ -45,7 +46,13 @@ namespace ContaAzul.Sdk.Net
             if (string.IsNullOrWhiteSpace(state)) throw new ArgumentNullException(nameof(state));
             if (string.IsNullOrWhiteSpace(scope)) throw new ArgumentNullException(nameof(scope));
 
-            if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out _))
+            // Exige um URL absoluto http/https. Não basta UriKind.Absolute: no Linux/Unix
+            // um caminho como "/callback" é interpretado como caminho absoluto do filesystem
+            // e vira um URI "file:///callback" válido (no Windows não), divergência que só
+            // apareceria no CI. Restringir a http/https cobre o que um redirect_uri OAuth deve
+            // ser e mantém o comportamento idêntico entre Windows e Linux.
+            if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var parsedRedirectUri)
+                || (parsedRedirectUri.Scheme != Uri.UriSchemeHttp && parsedRedirectUri.Scheme != Uri.UriSchemeHttps))
             {
                 throw new ArgumentException("redirectUri must be a valid absolute URL.", nameof(redirectUri));
             }
