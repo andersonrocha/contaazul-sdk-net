@@ -5,7 +5,10 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [0.2.2] - Não lançado
+## [0.2.2] - 2026-06-24
+
+> Primeira versão publicada no nuget.org. Consolida todo o desenvolvimento das
+> seções 0.1.0 a 0.2.2 abaixo (que nunca chegaram a ser publicadas isoladamente).
 
 ### Corrigido
 - `BuildAuthorizationUrl` separa os scopes com `+` (ex.: `openid+profile+...`) em vez de `%20`.

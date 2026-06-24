@@ -39,7 +39,7 @@ dotnet add package ContaAzul.Sdk.Net
 ### Via PackageReference
 
 ```xml
-<PackageReference Include="ContaAzul.Sdk.Net" Version="0.1.0" />
+<PackageReference Include="ContaAzul.Sdk.Net" Version="0.2.2" />
 ```
 
 ## Uso
