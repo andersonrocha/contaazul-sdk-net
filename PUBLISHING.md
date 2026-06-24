@@ -3,19 +3,34 @@
 Este SDK é publicado no **NuGet.org** (registro público do .NET) automaticamente via
 GitHub Actions quando um **Release** é criado no GitHub.
 
+A publicação usa **Trusted Publishing (OIDC)**: o workflow troca o token do GitHub Actions
+por uma **API key temporária** (validade de 1h) emitida pelo NuGet.org. **Não** há
+`NUGET_API_KEY` de longa duração armazenado no repositório.
+
 ## Pré-requisitos (uma vez)
 
-1. **Repositório público no GitHub** em `github.com/andersonrocha/contaazul-sdk-net`
-   (o `origin` já aponta para lá). Em *Settings → General*, deixe o repositório **Public**.
+1. **Repositório no GitHub** em `github.com/andersonrocha/contaazul-sdk-net`
+   (o `origin` já aponta para lá). Funciona com repositório público ou privado — se for
+   **privado**, a política de Trusted Publishing nasce "temporariamente ativa por 7 dias"
+   até o primeiro publish (proteção anti-resurrection); basta publicar dentro do prazo.
 
-2. **Conta no NuGet.org** e uma **API Key**:
-   - Acesse https://www.nuget.org → *API Keys* → *Create*.
-   - Escopo: *Push new packages and package versions*; Glob pattern: `ContaAzul.Sdk.Net` (ou `*`).
-   - Copie a chave.
+2. **Conta no NuGet.org** com a opção **Trusted Publishing** disponível (em rollout gradual).
 
-3. **Secret no GitHub**: *Settings → Secrets and variables → Actions → New repository secret*
-   - Nome: `NUGET_API_KEY`
-   - Valor: a API key do NuGet.org.
+3. **Política de Trusted Publishing** no NuGet.org:
+   - Acesse https://www.nuget.org → clique no seu usuário → *Trusted Publishing* → adicione uma política:
+
+   | Campo | Valor |
+   |-------|-------|
+   | Repository Owner | `andersonrocha` |
+   | Repository | `contaazul-sdk-net` |
+   | Workflow File | `publish-nuget.yml` *(só o nome, sem `.github/workflows/`)* |
+   | Environment | *(vazio)* |
+   | Owner da política | seu usuário ou a organização dona do pacote |
+
+4. **Secret no GitHub** com o nome de usuário do NuGet.org: *Settings → Secrets and variables →
+   Actions → New repository secret*
+   - Nome: `NUGET_USER`
+   - Valor: seu **nome de usuário (perfil)** do NuGet.org — **não** o e-mail.
 
 > O `PackageId` é **`ContaAzul.Sdk.Net`**. Confirme que está disponível em
 > https://www.nuget.org/packages/ContaAzul.Sdk.Net antes do primeiro push.
@@ -36,8 +51,11 @@ GitHub Actions quando um **Release** é criado no GitHub.
 
 ## Publicar localmente (opcional)
 
+> O Trusted Publishing (OIDC) vale **apenas para o CI**. Para um push manual da sua máquina
+> você ainda precisa de uma **API key pessoal** do NuGet.org (*API Keys → Create*).
+
 ```powershell
-dotnet pack contaazul-sdk-net/contaazul-sdk-net.csproj -c Release -p:Version=0.1.0 -o ./artifacts
+dotnet pack contaazul-sdk-net/contaazul-sdk-net.csproj -c Release -p:Version=0.2.2 -o ./artifacts
 dotnet nuget push "./artifacts/*.nupkg" --api-key <SUA_KEY> --source https://api.nuget.org/v3/index.json --skip-duplicate
 ```
 
