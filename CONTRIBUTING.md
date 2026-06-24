@@ -1,37 +1,37 @@
-# Guia de ContribuiÁ„o
+# Guia de Contribui√ß√£o
 
-Obrigado por considerar contribuir com o ContaAzul.Sdk.Net! Este documento fornece diretrizes para contribuiÁıes.
+Obrigado por considerar contribuir com o ContaAzul.Sdk.Net! Este documento fornece diretrizes para contribui√ß√µes.
 
 ## ?? Como Contribuir
 
 ### Reportar Bugs
 
-Se vocÍ encontrar um bug:
+Se voc√™ encontrar um bug:
 
-1. Verifique se j· n„o existe uma [issue aberta](https://github.com/andersonrocha/contaazul-dotnet/issues)
-2. Se n„o existir, [crie uma nova issue](https://github.com/andersonrocha/contaazul-dotnet/issues/new) com:
-   - TÌtulo descritivo
-   - DescriÁ„o detalhada do problema
+1. Verifique se j√° n√£o existe uma [issue aberta](https://github.com/andersonrocha/contaazul-dotnet/issues)
+2. Se n√£o existir, [crie uma nova issue](https://github.com/andersonrocha/contaazul-dotnet/issues/new) com:
+   - T√≠tulo descritivo
+   - Descri√ß√£o detalhada do problema
    - Passos para reproduzir
    - Comportamento esperado vs. atual
-   - Vers„o do SDK e .NET
-   - CÛdigo de exemplo (se possÌvel)
+   - Vers√£o do SDK e .NET
+   - C√≥digo de exemplo (se poss√≠vel)
 
 ### Sugerir Melhorias
 
 Para sugerir novas funcionalidades ou melhorias:
 
 1. Abra uma [nova issue](https://github.com/andersonrocha/contaazul-dotnet/issues/new)
-2. Use o prefixo `[Feature Request]` no tÌtulo
+2. Use o prefixo `[Feature Request]` no t√≠tulo
 3. Descreva:
    - O problema que a feature resolve
-   - Como vocÍ imagina a soluÁ„o
+   - Como voc√™ imagina a solu√ß√£o
    - Exemplos de uso
    - Alternativas consideradas
 
 ### Enviar Pull Requests
 
-1. **Fork o repositÛrio**
+1. **Fork o reposit√≥rio**
    ```bash
    # Via GitHub ou CLI
    gh repo fork andersonrocha/contaazul-dotnet
@@ -50,12 +50,12 @@ Para sugerir novas funcionalidades ou melhorias:
    git checkout -b fix/meu-bugfix
    ```
 
-4. **FaÁa suas alteraÁıes**
-   - Siga as [convenÁıes de cÛdigo](#convenÁıes-de-cÛdigo)
+4. **Fa√ßa suas altera√ß√µes**
+   - Siga as [conven√ß√µes de c√≥digo](#conven√ß√µes-de-c√≥digo)
    - Adicione testes para novas funcionalidades
-   - Atualize a documentaÁ„o se necess·rio
+   - Atualize a documenta√ß√£o se necess√°rio
 
-5. **Commit suas mudanÁas**
+5. **Commit suas mudan√ßas**
    ```bash
    git add .
    git commit -m "feat: adiciona nova funcionalidade X"
@@ -69,16 +69,16 @@ Para sugerir novas funcionalidades ou melhorias:
    ```
 
 7. **Abra um Pull Request**
-   - V· atÈ o repositÛrio original no GitHub
+   - V√° at√© o reposit√≥rio original no GitHub
    - Clique em "Compare & pull request"
    - Preencha o template do PR
-   - Aguarde a revis„o
+   - Aguarde a revis√£o
 
-## ?? ConvenÁıes de CÛdigo
+## ?? Conven√ß√µes de C√≥digo
 
 ### Estilo C#
 
-Seguimos as [convenÁıes de cÛdigo C# da Microsoft](https://docs.microsoft.com/pt-br/dotnet/csharp/fundamentals/coding-style/coding-conventions):
+Seguimos as [conven√ß√µes de c√≥digo C# da Microsoft](https://docs.microsoft.com/pt-br/dotnet/csharp/fundamentals/coding-style/coding-conventions):
 
 ```csharp
 // ? BOM
@@ -96,40 +96,40 @@ public async Task<PessoaListResponse> getPessoas(PessoaFiltro filtro = null)
 }
 ```
 
-### Diretrizes EspecÌficas
+### Diretrizes Espec√≠ficas
 
 1. **Nomenclatura**
    - Classes: `PascalCase`
-   - MÈtodos: `PascalCase`
-   - Vari·veis locais: `camelCase`
+   - M√©todos: `PascalCase`
+   - Vari√°veis locais: `camelCase`
    - Campos privados: `_camelCase`
    - Constantes: `PascalCase`
 
 2. **Async/Await**
    - Sempre use `ConfigureAwait(false)` em bibliotecas
-   - MÈtodos assÌncronos devem terminar com `Async`
+   - M√©todos ass√≠ncronos devem terminar com `Async`
    - Use `CancellationToken` quando apropriado
 
-3. **DocumentaÁ„o XML**
+3. **Documenta√ß√£o XML**
    ```csharp
    /// <summary>
-   /// ObtÈm a lista de pessoas do ContaAzul.
+   /// Obt√©m a lista de pessoas do ContaAzul.
    /// </summary>
    /// <param name="filtro">Filtros opcionais para a busca.</param>
-   /// <param name="cancellationToken">Token para cancelamento da operaÁ„o.</param>
+   /// <param name="cancellationToken">Token para cancelamento da opera√ß√£o.</param>
    /// <returns>Lista paginada de pessoas.</returns>
    public async Task<PessoaListResponse> GetPessoasAsync(
        PessoaFiltro filtro = null, 
        CancellationToken cancellationToken = default)
    {
-       // implementaÁ„o
+       // implementa√ß√£o
    }
    ```
 
 4. **Tratamento de Erros**
-   - Use exceÁıes para erros excepcionais
-   - Valide par‚metros de entrada
-   - Documente exceÁıes que podem ser lanÁadas
+   - Use exce√ß√µes para erros excepcionais
+   - Valide par√¢metros de entrada
+   - Documente exce√ß√µes que podem ser lan√ßadas
 
 ## ?? Testes
 
@@ -142,7 +142,7 @@ dotnet test
 # Com cobertura
 dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 
-# Testes de uma classe especÌfica
+# Testes de uma classe espec√≠fica
 dotnet test --filter FullyQualifiedName~NotasFiscaisApiTests
 ```
 
@@ -182,22 +182,22 @@ Usamos [Conventional Commits](https://www.conventionalcommits.org/pt-br/) para m
 ### Formato
 
 ```
-<tipo>[escopo opcional]: <descriÁ„o>
+<tipo>[escopo opcional]: <descri√ß√£o>
 
 [corpo opcional]
 
-[rodapÈ opcional]
+[rodap√© opcional]
 ```
 
 ### Tipos
 
 - `feat`: Nova funcionalidade
-- `fix`: CorreÁ„o de bug
-- `docs`: Apenas documentaÁ„o
-- `style`: FormataÁ„o, ponto e vÌrgula, etc (sem mudanÁa de cÛdigo)
-- `refactor`: RefatoraÁ„o de cÛdigo
+- `fix`: Corre√ß√£o de bug
+- `docs`: Apenas documenta√ß√£o
+- `style`: Formata√ß√£o, ponto e v√≠rgula, etc (sem mudan√ßa de c√≥digo)
+- `refactor`: Refatora√ß√£o de c√≥digo
 - `perf`: Melhoria de performance
-- `test`: AdiÁ„o ou correÁ„o de testes
+- `test`: Adi√ß√£o ou corre√ß√£o de testes
 - `chore`: Tarefas de build, configs, etc
 
 ### Exemplos
@@ -209,16 +209,16 @@ git commit -m "feat(api): adiciona suporte para API de Produtos"
 # Bugfix
 git commit -m "fix(auth): corrige refresh de token expirado"
 
-# DocumentaÁ„o
+# Documenta√ß√£o
 git commit -m "docs: atualiza README com exemplos de uso"
 
-# RefatoraÁ„o
-git commit -m "refactor(querybuilder): simplifica construÁ„o de endpoint"
+# Refatora√ß√£o
+git commit -m "refactor(querybuilder): simplifica constru√ß√£o de endpoint"
 
 # Breaking change
-git commit -m "feat(api)!: altera assinatura do mÈtodo GetPessoas
+git commit -m "feat(api)!: altera assinatura do m√©todo GetPessoas
 
-BREAKING CHANGE: mÈtodo GetPessoas agora retorna Task<Result<PessoaListResponse>>"
+BREAKING CHANGE: m√©todo GetPessoas agora retorna Task<Result<PessoaListResponse>>"
 ```
 
 ## ??? Estrutura do Projeto
@@ -237,117 +237,117 @@ contaazul-dotnet/
 ?   ??? *Tests.cs                  # Outros testes
 ??? .github/                        # GitHub workflows
 ?   ??? workflows/
-?       ??? ci.yml                 # IntegraÁ„o contÌnua
-?       ??? publish-nuget.yml      # PublicaÁ„o NuGet
-??? CHANGELOG.md                    # HistÛrico de mudanÁas
-??? README.md                       # DocumentaÁ„o principal
-??? LICENSE                         # LicenÁa MIT
+?       ??? ci.yml                 # Integra√ß√£o cont√≠nua
+?       ??? publish-nuget.yml      # Publica√ß√£o NuGet
+??? CHANGELOG.md                    # Hist√≥rico de mudan√ßas
+??? README.md                       # Documenta√ß√£o principal
+??? LICENSE                         # Licen√ßa MIT
 ??? CONTRIBUTING.md                 # Este arquivo
 ```
 
-## ?? Processo de Revis„o
+## ?? Processo de Revis√£o
 
 ### O que revisamos
 
 1. **Funcionalidade**
-   - A mudanÁa faz o que propıe?
-   - H· efeitos colaterais?
-   - … backward compatible?
+   - A mudan√ßa faz o que prop√µe?
+   - H√° efeitos colaterais?
+   - √â backward compatible?
 
-2. **Qualidade do CÛdigo**
-   - Segue as convenÁıes?
-   - Est· bem documentado?
-   - … test·vel?
+2. **Qualidade do C√≥digo**
+   - Segue as conven√ß√µes?
+   - Est√° bem documentado?
+   - √â test√°vel?
 
 3. **Testes**
-   - H· testes suficientes?
+   - H√° testes suficientes?
    - Os testes passam?
    - Cobertura adequada?
 
-4. **DocumentaÁ„o**
+4. **Documenta√ß√£o**
    - README atualizado?
    - XML comments completos?
    - CHANGELOG atualizado?
 
 ### Tempo de Resposta
 
-- Revisaremos PRs em atÈ 7 dias
-- Bugs crÌticos tÍm prioridade
-- Feedback ser· construtivo
+- Revisaremos PRs em at√© 7 dias
+- Bugs cr√≠ticos t√™m prioridade
+- Feedback ser√° construtivo
 
-## ?? ¡reas que Precisam de Ajuda
+## ?? √Åreas que Precisam de Ajuda
 
-Estamos especialmente interessados em contribuiÁıes nas seguintes ·reas:
+Estamos especialmente interessados em contribui√ß√µes nas seguintes √°reas:
 
-- [ ] ImplementaÁ„o de APIs faltantes (Produtos, Categorias, Contratos)
-- [ ] Melhoria da documentaÁ„o e exemplos
-- [ ] Testes de integraÁ„o
+- [ ] Implementa√ß√£o de APIs faltantes (Produtos, Categorias, Contratos)
+- [ ] Melhoria da documenta√ß√£o e exemplos
+- [ ] Testes de integra√ß√£o
 - [ ] Suporte para webhooks
-- [ ] Performance e otimizaÁıes
-- [ ] CorreÁ„o de bugs conhecidos
+- [ ] Performance e otimiza√ß√µes
+- [ ] Corre√ß√£o de bugs conhecidos
 
 ## ?? Dicas para Contribuidores
 
 1. **Comece Pequeno**
-   - CorreÁıes de typos e melhorias na documentaÁ„o s„o Ûtimos primeiros PRs
-   - Familiarize-se com o cÛdigo antes de grandes mudanÁas
+   - Corre√ß√µes de typos e melhorias na documenta√ß√£o s√£o √≥timos primeiros PRs
+   - Familiarize-se com o c√≥digo antes de grandes mudan√ßas
 
 2. **Comunique-se**
    - Abra uma issue antes de grandes features
-   - Pergunte se n„o tiver certeza
+   - Pergunte se n√£o tiver certeza
    - Seja receptivo a feedback
 
-3. **Siga os Padrıes**
-   - Veja como o cÛdigo existente est· estruturado
-   - Mantenha consistÍncia
-   - Use as mesmas bibliotecas e padrıes
+3. **Siga os Padr√µes**
+   - Veja como o c√≥digo existente est√° estruturado
+   - Mantenha consist√™ncia
+   - Use as mesmas bibliotecas e padr√µes
 
 4. **Teste Localmente**
    - Execute todos os testes antes de enviar PR
-   - Teste em diferentes cen·rios
-   - Verifique se a documentaÁ„o est· correta
+   - Teste em diferentes cen√°rios
+   - Verifique se a documenta√ß√£o est√° correta
 
 ## ?? Contato
 
 - Issues: https://github.com/andersonrocha/contaazul-dotnet/issues
 - Discussions: https://github.com/andersonrocha/contaazul-dotnet/discussions
 
-## ?? CÛdigo de Conduta
+## ?? C√≥digo de Conduta
 
 ### Nosso Compromisso
 
-Estamos comprometidos em proporcionar uma experiÍncia acolhedora e inspiradora para todos.
+Estamos comprometidos em proporcionar uma experi√™ncia acolhedora e inspiradora para todos.
 
 ### Comportamento Esperado
 
 - Use linguagem acolhedora e inclusiva
 - Respeite diferentes pontos de vista
-- Aceite crÌticas construtivas graciosamente
-- Foque no que È melhor para a comunidade
+- Aceite cr√≠ticas construtivas graciosamente
+- Foque no que √© melhor para a comunidade
 
-### Comportamento Inaceit·vel
+### Comportamento Inaceit√°vel
 
-- AssÈdio de qualquer tipo
-- Trolling ou coment·rios insultuosos
-- Publicar informaÁıes privadas de terceiros
-- Conduta n„o profissional
+- Ass√©dio de qualquer tipo
+- Trolling ou coment√°rios insultuosos
+- Publicar informa√ß√µes privadas de terceiros
+- Conduta n√£o profissional
 
-### AplicaÁ„o
+### Aplica√ß√£o
 
-ViolaÁıes podem resultar em:
+Viola√ß√µes podem resultar em:
 - Aviso
-- Banimento tempor·rio
+- Banimento tempor√°rio
 - Banimento permanente
 
-Reporte comportamentos inaceit·veis para: anderson@exemplo.com
+Reporte comportamentos inaceit√°veis para: anderson@exemplo.com
 
 ## ?? Recursos Adicionais
 
-- [DocumentaÁ„o .NET](https://docs.microsoft.com/pt-br/dotnet/)
+- [Documenta√ß√£o .NET](https://docs.microsoft.com/pt-br/dotnet/)
 - [API ContaAzul](https://developers.contaazul.com/)
 - [Conventional Commits](https://www.conventionalcommits.org/pt-br/)
 - [Semantic Versioning](https://semver.org/lang/pt-BR/)
 
 ---
 
-**Obrigado por contribuir! Cada contribuiÁ„o, grande ou pequena, È valiosa para o projeto.** ??
+**Obrigado por contribuir! Cada contribui√ß√£o, grande ou pequena, √© valiosa para o projeto.** ??

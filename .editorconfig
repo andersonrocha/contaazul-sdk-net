@@ -1,0 +1,10 @@
+# EditorConfig — https://editorconfig.org
+# Guarda mínima de encoding.
+#
+# Motivo: arquivos salvos em Latin-1/cp1252 (ex.: "ã" como byte 0xE3) compilam no
+# Windows mas quebram no CI Linux, onde o padrão é UTF-8 e o byte isolado vira
+# U+FFFD (�). Forçar UTF-8 nos editores evita essa regressão.
+root = true
+
+[*]
+charset = utf-8

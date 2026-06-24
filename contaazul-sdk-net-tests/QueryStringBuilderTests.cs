@@ -52,7 +52,7 @@ public class QueryStringBuilderTests
         {
             Pagina = 1,
             TamanhoPagina = 10,
-            Busca = "Jo„o"
+            Busca = "Jo√£o"
         };
 
         var result = QueryStringBuilder.BuildEndpoint(TestEndpoint, filtro);
@@ -90,7 +90,7 @@ public class QueryStringBuilderTests
     {
         var filtro = new PessoaFiltro
         {
-            Busca = "Jo„o & Maria"
+            Busca = "Jo√£o & Maria"
         };
 
         var result = QueryStringBuilder.BuildEndpoint(TestEndpoint, filtro);
@@ -117,12 +117,12 @@ public class QueryStringBuilderTests
             Ids = "1,2,3",
             Documentos = "123456789",
             Paises = "Brasil",
-            Cidades = "S„o Paulo",
+            Cidades = "S√£o Paulo",
             Ufs = "SP",
             CodigosPessoa = "C001",
             Emails = "test@example.com",
             TiposPessoa = "FISICA",
-            Nomes = "Jo„o",
+            Nomes = "Jo√£o",
             Telefones = "11999999999",
             DataCriacaoInicio = "2024-01-01",
             DataCriacaoFim = "2024-12-31",

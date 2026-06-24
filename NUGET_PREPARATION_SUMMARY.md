@@ -1,10 +1,10 @@
-# PreparaÁ„o para PublicaÁ„o no NuGet - Resumo
+# Prepara√ß√£o para Publica√ß√£o no NuGet - Resumo
 
-Este documento resume todas as alteraÁıes e arquivos criados para preparar o projeto ContaAzul.Sdk.Net para publicaÁ„o no NuGet.
+Este documento resume todas as altera√ß√µes e arquivos criados para preparar o projeto ContaAzul.Sdk.Net para publica√ß√£o no NuGet.
 
 ## ? Arquivos Criados/Modificados
 
-### 1. ConfiguraÁ„o do Projeto (.csproj)
+### 1. Configura√ß√£o do Projeto (.csproj)
 **Arquivo**: `contaazul-sdk-net/contaazul-sdk-net.csproj`
 
 **Metadados adicionados**:
@@ -12,83 +12,83 @@ Este documento resume todas as alteraÁıes e arquivos criados para preparar o pro
 - `Version`: 1.0.0
 - `Authors`: Anderson Rocha
 - `Company`: ContaAzul SDK
-- `Description`: DescriÁ„o completa do pacote
+- `Description`: Descri√ß√£o completa do pacote
 - `PackageTags`: contaazul;api;sdk;dotnet;netstandard;integration;erp
 - `PackageProjectUrl`: Link do GitHub
-- `RepositoryUrl`: URL do repositÛrio Git
+- `RepositoryUrl`: URL do reposit√≥rio Git
 - `RepositoryType`: git
 - `PackageLicenseExpression`: MIT
 - `PackageReadmeFile`: README.md
-- `PackageReleaseNotes`: Notas de vers„o
-- `GenerateDocumentationFile`: true (gera XML de documentaÁ„o)
-- `IncludeSymbols`: true (inclui sÌmbolos de debug)
+- `PackageReleaseNotes`: Notas de vers√£o
+- `GenerateDocumentationFile`: true (gera XML de documenta√ß√£o)
+- `IncludeSymbols`: true (inclui s√≠mbolos de debug)
 - `SymbolPackageFormat`: snupkg
 
-### 2. DocumentaÁ„o
+### 2. Documenta√ß√£o
 
 #### README.md (atualizado)
-- Badges do NuGet e licenÁa
-- SeÁ„o de caracterÌsticas
-- InstruÁıes de instalaÁ„o via NuGet
+- Badges do NuGet e licen√ßa
+- Se√ß√£o de caracter√≠sticas
+- Instru√ß√µes de instala√ß√£o via NuGet
 - Exemplos de uso para todas as APIs:
   - PessoasApi
   - VendasApi
   - NotasFiscaisApi
-- Guia de autenticaÁ„o OAuth2
+- Guia de autentica√ß√£o OAuth2
 - Exemplos de tratamento de erros
-- DocumentaÁ„o de filtros disponÌveis
+- Documenta√ß√£o de filtros dispon√≠veis
 
 #### NUGET_PUBLISH_GUIDE.md (novo)
-- Guia passo a passo para publicaÁ„o manual
-- InstruÁıes para publicaÁ„o automatizada via GitHub Actions
-- Comandos ˙teis do NuGet CLI
-- Checklist prÈ-publicaÁ„o
-- Guia de versionamento sem‚ntico
-- SeÁ„o de troubleshooting
+- Guia passo a passo para publica√ß√£o manual
+- Instru√ß√µes para publica√ß√£o automatizada via GitHub Actions
+- Comandos √∫teis do NuGet CLI
+- Checklist pr√©-publica√ß√£o
+- Guia de versionamento sem√¢ntico
+- Se√ß√£o de troubleshooting
 
 #### CHANGELOG.md (novo)
-- HistÛrico de versıes seguindo Keep a Changelog
-- DocumentaÁ„o da vers„o 1.0.0
-- SeÁ„o de mudanÁas planejadas
-- Guia de tipos de mudanÁas
+- Hist√≥rico de vers√µes seguindo Keep a Changelog
+- Documenta√ß√£o da vers√£o 1.0.0
+- Se√ß√£o de mudan√ßas planejadas
+- Guia de tipos de mudan√ßas
 
-### 3. EspecificaÁ„o NuGet
+### 3. Especifica√ß√£o NuGet
 
 #### ContaAzul.Sdk.Net.nuspec (novo)
-- Arquivo de especificaÁ„o opcional do NuGet
+- Arquivo de especifica√ß√£o opcional do NuGet
 - Metadados completos do pacote
-- Lista de dependÍncias
+- Lista de depend√™ncias
 - Arquivos a incluir no pacote
 
-### 4. AutomaÁ„o CI/CD
+### 4. Automa√ß√£o CI/CD
 
 #### .github/workflows/publish-nuget.yml (novo)
-**Workflow de publicaÁ„o**:
+**Workflow de publica√ß√£o**:
 - Trigger: Release publicado ou manual
 - Build do projeto
-- ExecuÁ„o de testes
-- CriaÁ„o do pacote NuGet
-- PublicaÁ„o autom·tica no NuGet.org
+- Execu√ß√£o de testes
+- Cria√ß√£o do pacote NuGet
+- Publica√ß√£o autom√°tica no NuGet.org
 - Upload de artefatos
 
 #### .github/workflows/ci.yml (novo)
-**Workflow de IntegraÁ„o ContÌnua**:
+**Workflow de Integra√ß√£o Cont√≠nua**:
 - Trigger: Push/PR para main/develop
-- Testa em m˙ltiplas versıes do .NET (6.0, 7.0, 8.0)
-- Build e testes autom·ticos
-- GeraÁ„o de relatÛrio de cobertura
+- Testa em m√∫ltiplas vers√µes do .NET (6.0, 7.0, 8.0)
+- Build e testes autom√°ticos
+- Gera√ß√£o de relat√≥rio de cobertura
 - Upload para Codecov
 
-### 5. Arquivo de LicenÁa
+### 5. Arquivo de Licen√ßa
 **Arquivo**: `LICENSE`
-- LicenÁa MIT (j· existia)
+- Licen√ßa MIT (j√° existia)
 
 ## ?? Como Publicar
 
-### OpÁ„o 1: PublicaÁ„o Manual
+### Op√ß√£o 1: Publica√ß√£o Manual
 
 ```bash
-# 1. Navegar atÈ o diretÛrio do projeto
+# 1. Navegar at√© o diret√≥rio do projeto
 cd contaazul-sdk-net
 
 # 2. Compilar em Release
@@ -102,31 +102,31 @@ cd bin\Release
 dotnet nuget push ContaAzul.Sdk.Net.1.0.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
-### OpÁ„o 2: PublicaÁ„o Automatizada via GitHub
+### Op√ß√£o 2: Publica√ß√£o Automatizada via GitHub
 
 1. **Configurar API Key**:
-   - V· em Settings > Secrets > Actions
+   - V√° em Settings > Secrets > Actions
    - Crie o secret `NUGET_API_KEY` com sua chave do NuGet.org
 
 2. **Criar Release**:
-   - V· em Releases > Create a new release
+   - V√° em Releases > Create a new release
    - Crie uma tag (ex: `v1.0.0`)
    - Publique o release
-   - O GitHub Actions publicar· automaticamente
+   - O GitHub Actions publicar√° automaticamente
 
 3. **Ou executar manualmente**:
-   - V· em Actions > Publish to NuGet
+   - V√° em Actions > Publish to NuGet
    - Clique em "Run workflow"
-   - Informe a vers„o
+   - Informe a vers√£o
    - Execute
 
-## ?? PrÛximos Passos
+## ?? Pr√≥ximos Passos
 
 ### Antes de Publicar a Primeira Vez
 
 1. **Obter API Key do NuGet.org**:
    - Acesse: https://www.nuget.org/account/apikeys
-   - Crie uma nova API Key com permissıes de push
+   - Crie uma nova API Key com permiss√µes de push
    - Guarde a chave em local seguro
 
 2. **Testar Localmente**:
@@ -140,24 +140,24 @@ dotnet nuget push ContaAzul.Sdk.Net.1.0.0.nupkg --api-key YOUR_API_KEY --source 
    dotnet add package ContaAzul.Sdk.Net --version 1.0.0
    ```
 
-3. **Verificar Conte˙do do Pacote**:
+3. **Verificar Conte√∫do do Pacote**:
    ```bash
-   # O .nupkg È um arquivo ZIP
-   # Renomeie e extraia para verificar o conte˙do
+   # O .nupkg √© um arquivo ZIP
+   # Renomeie e extraia para verificar o conte√∫do
    ```
 
 4. **Atualizar Data de Release**:
    - Atualize as datas no CHANGELOG.md
    - Atualize as datas nas release notes do .csproj
 
-### ApÛs a PublicaÁ„o
+### Ap√≥s a Publica√ß√£o
 
 1. **Verificar no NuGet.org**:
-   - Aguarde alguns minutos para indexaÁ„o
+   - Aguarde alguns minutos para indexa√ß√£o
    - Acesse: https://www.nuget.org/packages/ContaAzul.Sdk.Net/
-   - Verifique todas as informaÁıes
+   - Verifique todas as informa√ß√µes
 
-2. **Testar InstalaÁ„o Real**:
+2. **Testar Instala√ß√£o Real**:
    ```bash
    dotnet new console -n TestContaAzulSdk
    cd TestContaAzulSdk
@@ -166,41 +166,41 @@ dotnet nuget push ContaAzul.Sdk.Net.1.0.0.nupkg --api-key YOUR_API_KEY --source 
 
 3. **Anunciar**:
    - Criar post no GitHub Discussions
-   - Atualizar README se necess·rio
+   - Atualizar README se necess√°rio
    - Compartilhar nas redes sociais
 
 ## ?? Checklist Final
 
 Antes de publicar, verifique:
 
-- [x] Vers„o atualizada no .csproj (1.0.0)
+- [x] Vers√£o atualizada no .csproj (1.0.0)
 - [x] README.md completo e atualizado
 - [x] CHANGELOG.md atualizado
-- [x] LicenÁa MIT configurada
-- [x] DocumentaÁ„o XML habilitada
+- [x] Licen√ßa MIT configurada
+- [x] Documenta√ß√£o XML habilitada
 - [x] Workflows do GitHub Actions criados
 - [ ] Todos os testes passando
 - [ ] API Key do NuGet.org configurada
 - [ ] Pacote testado localmente
 - [ ] Tag Git criada (ex: v1.0.0)
 
-## ?? InformaÁıes do Pacote
+## ?? Informa√ß√µes do Pacote
 
 | Propriedade | Valor |
 |------------|-------|
 | Package ID | ContaAzul.Sdk.Net |
-| Vers„o Inicial | 1.0.0 |
+| Vers√£o Inicial | 1.0.0 |
 | Target Framework | .NET Standard 2.0 |
-| LicenÁa | MIT |
+| Licen√ßa | MIT |
 | Autor | Anderson Rocha |
-| RepositÛrio | https://github.com/andersonrocha/contaazul-dotnet |
+| Reposit√≥rio | https://github.com/andersonrocha/contaazul-dotnet |
 | Tags | contaazul, api, sdk, dotnet, netstandard, integration, erp |
 
 ## ?? Recursos Adicionais
 
-- [DocumentaÁ„o NuGet](https://docs.microsoft.com/pt-br/nuget/)
-- [Guia de PublicaÁ„o](https://docs.microsoft.com/pt-br/nuget/nuget-org/publish-a-package)
-- [Versionamento Sem‚ntico](https://semver.org/lang/pt-BR/)
+- [Documenta√ß√£o NuGet](https://docs.microsoft.com/pt-br/nuget/)
+- [Guia de Publica√ß√£o](https://docs.microsoft.com/pt-br/nuget/nuget-org/publish-a-package)
+- [Versionamento Sem√¢ntico](https://semver.org/lang/pt-BR/)
 - [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 - [GitHub Actions](https://docs.github.com/pt/actions)
 
@@ -210,24 +210,24 @@ Nenhum problema conhecido no momento.
 
 ## ?? Dicas
 
-1. **Versionamento**: Sempre incremente a vers„o para cada publicaÁ„o. N„o È possÌvel republicar a mesma vers„o.
+1. **Versionamento**: Sempre incremente a vers√£o para cada publica√ß√£o. N√£o √© poss√≠vel republicar a mesma vers√£o.
 
 2. **Testes**: Execute todos os testes antes de publicar:
    ```bash
    dotnet test --verbosity normal
    ```
 
-3. **ValidaÁ„o**: Use o comando de verificaÁ„o do NuGet:
+3. **Valida√ß√£o**: Use o comando de verifica√ß√£o do NuGet:
    ```bash
    dotnet nuget verify bin\Release\ContaAzul.Sdk.Net.1.0.0.nupkg
    ```
 
-4. **DocumentaÁ„o**: Mantenha o README.md sempre atualizado com exemplos funcionais.
+4. **Documenta√ß√£o**: Mantenha o README.md sempre atualizado com exemplos funcionais.
 
-5. **SeguranÁa**: NUNCA commite API Keys no repositÛrio. Use sempre GitHub Secrets.
+5. **Seguran√ßa**: NUNCA commite API Keys no reposit√≥rio. Use sempre GitHub Secrets.
 
 ---
 
-**Status**: ? Projeto pronto para publicaÁ„o no NuGet!
+**Status**: ? Projeto pronto para publica√ß√£o no NuGet!
 
-**⁄ltima atualizaÁ„o**: 2024-01-XX
+**√öltima atualiza√ß√£o**: 2024-01-XX

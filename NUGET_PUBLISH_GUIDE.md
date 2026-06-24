@@ -1,8 +1,8 @@
-# Guia de PublicaÁ„o no NuGet
+# Guia de Publica√ß√£o no NuGet
 
 Este documento descreve o processo para publicar o pacote ContaAzul.Sdk.Net no NuGet.
 
-## PrÈ-requisitos
+## Pr√©-requisitos
 
 1. **Conta no NuGet.org**
    - Crie uma conta em https://www.nuget.org/
@@ -12,13 +12,13 @@ Este documento descreve o processo para publicar o pacote ContaAzul.Sdk.Net no N
    - Certifique-se de ter o .NET SDK instalado
    - Execute: `dotnet --version` para verificar
 
-3. **CÛdigo-fonte atualizado**
+3. **C√≥digo-fonte atualizado**
    - Certifique-se de que todos os testes passam
-   - Atualize a vers„o no arquivo `.csproj`
+   - Atualize a vers√£o no arquivo `.csproj`
 
 ## Passo a Passo
 
-### 1. Atualizar Vers„o
+### 1. Atualizar Vers√£o
 
 Edite o arquivo `contaazul-sdk-net\contaazul-sdk-net.csproj` e atualize a tag `<Version>`:
 
@@ -26,15 +26,15 @@ Edite o arquivo `contaazul-sdk-net\contaazul-sdk-net.csproj` e atualize a tag `<
 <Version>1.0.0</Version>
 ```
 
-Siga o Versionamento Sem‚ntico (SemVer):
-- **MAJOR**: MudanÁas incompatÌveis com versıes anteriores
+Siga o Versionamento Sem√¢ntico (SemVer):
+- **MAJOR**: Mudan√ßas incompat√≠veis com vers√µes anteriores
 - **MINOR**: Novas funcionalidades mantendo compatibilidade
-- **PATCH**: CorreÁıes de bugs
+- **PATCH**: Corre√ß√µes de bugs
 
 ### 2. Compilar em Release
 
 ```bash
-# Navegue atÈ o diretÛrio do projeto
+# Navegue at√© o diret√≥rio do projeto
 cd contaazul-sdk-net
 
 # Compile em modo Release
@@ -47,7 +47,7 @@ dotnet build -c Release
 # Criar o pacote .nupkg
 dotnet pack -c Release
 
-# O pacote ser· criado em: bin\Release\ContaAzul.Sdk.Net.1.0.0.nupkg
+# O pacote ser√° criado em: bin\Release\ContaAzul.Sdk.Net.1.0.0.nupkg
 ```
 
 ### 4. Testar Localmente (Opcional mas Recomendado)
@@ -71,27 +71,27 @@ dotnet add package ContaAzul.Sdk.Net --version 1.0.0
 ### 5. Publicar no NuGet.org
 
 ```bash
-# Navegue atÈ a pasta onde est· o .nupkg
+# Navegue at√© a pasta onde est√° o .nupkg
 cd bin\Release
 
 # Publique o pacote (substitua YOUR_API_KEY pela sua chave)
 dotnet nuget push ContaAzul.Sdk.Net.1.0.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
-### 6. Verificar PublicaÁ„o
+### 6. Verificar Publica√ß√£o
 
 1. Acesse https://www.nuget.org/packages/ContaAzul.Sdk.Net/
 2. Aguarde alguns minutos para o pacote ser indexado
-3. Verifique se todas as informaÁıes est„o corretas:
-   - Vers„o
-   - DescriÁ„o
+3. Verifique se todas as informa√ß√µes est√£o corretas:
+   - Vers√£o
+   - Descri√ß√£o
    - Tags
-   - DependÍncias
+   - Depend√™ncias
    - README
 
-## PublicaÁ„o Automatizada com GitHub Actions
+## Publica√ß√£o Automatizada com GitHub Actions
 
-Para automatizar o processo, vocÍ pode criar um workflow do GitHub Actions:
+Para automatizar o processo, voc√™ pode criar um workflow do GitHub Actions:
 
 ### Criar `.github/workflows/publish-nuget.yml`:
 
@@ -146,16 +146,16 @@ jobs:
 
 ### Criar Release:
 
-1. V· atÈ `Releases` no GitHub
+1. V√° at√© `Releases` no GitHub
 2. Clique em `Create a new release`
 3. Crie uma nova tag (ex: `v1.0.0`)
-4. Preencha o tÌtulo e descriÁ„o
+4. Preencha o t√≠tulo e descri√ß√£o
 5. Publique
-6. O GitHub Actions publicar· automaticamente no NuGet
+6. O GitHub Actions publicar√° automaticamente no NuGet
 
-## Comandos ⁄teis
+## Comandos √öteis
 
-### Ver informaÁıes do pacote
+### Ver informa√ß√µes do pacote
 ```bash
 nuget spec contaazul-sdk-net.csproj
 ```
@@ -165,60 +165,60 @@ nuget spec contaazul-sdk-net.csproj
 dotnet nuget verify bin\Release\ContaAzul.Sdk.Net.1.0.0.nupkg
 ```
 
-### Listar conte˙do do pacote
+### Listar conte√∫do do pacote
 ```bash
 # Renomeie .nupkg para .zip
 cp bin\Release\ContaAzul.Sdk.Net.1.0.0.nupkg ContaAzul.Sdk.Net.1.0.0.zip
 
-# Extraia e inspecione o conte˙do
+# Extraia e inspecione o conte√∫do
 ```
 
-### Despublicar/Deslistar vers„o (emergÍncia)
+### Despublicar/Deslistar vers√£o (emerg√™ncia)
 ```bash
 dotnet nuget delete ContaAzul.Sdk.Net 1.0.0 --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
-**Nota**: Isso apenas deslista o pacote, n„o o remove permanentemente. NinguÈm poder· mais instal·-lo, mas quem j· instalou continuar· funcionando.
+**Nota**: Isso apenas deslista o pacote, n√£o o remove permanentemente. Ningu√©m poder√° mais instal√°-lo, mas quem j√° instalou continuar√° funcionando.
 
-## Checklist PrÈ-PublicaÁ„o
+## Checklist Pr√©-Publica√ß√£o
 
-- [ ] Todos os testes unit·rios passam
-- [ ] Vers„o atualizada no `.csproj`
+- [ ] Todos os testes unit√°rios passam
+- [ ] Vers√£o atualizada no `.csproj`
 - [ ] README.md atualizado
 - [ ] CHANGELOG atualizado (se houver)
 - [ ] Release notes preenchidas
-- [ ] LicenÁa correta (MIT)
-- [ ] DocumentaÁ„o XML gerada
+- [ ] Licen√ßa correta (MIT)
+- [ ] Documenta√ß√£o XML gerada
 - [ ] Pacote testado localmente
 - [ ] Commit e push realizados
 - [ ] Tag criada no Git (ex: `v1.0.0`)
 
 ## Versionamento
 
-Siga este padr„o para cada release:
+Siga este padr√£o para cada release:
 
-| Tipo de MudanÁa | Vers„o Anterior | Nova Vers„o |
+| Tipo de Mudan√ßa | Vers√£o Anterior | Nova Vers√£o |
 |-----------------|----------------|-------------|
-| CorreÁ„o de bug | 1.0.0 | 1.0.1 |
-| Nova feature (compatÌvel) | 1.0.1 | 1.1.0 |
+| Corre√ß√£o de bug | 1.0.0 | 1.0.1 |
+| Nova feature (compat√≠vel) | 1.0.1 | 1.1.0 |
 | Breaking change | 1.1.0 | 2.0.0 |
 
 ## Suporte
 
-- DocumentaÁ„o NuGet: https://docs.microsoft.com/pt-br/nuget/
-- Guia de PublicaÁ„o: https://docs.microsoft.com/pt-br/nuget/nuget-org/publish-a-package
+- Documenta√ß√£o NuGet: https://docs.microsoft.com/pt-br/nuget/
+- Guia de Publica√ß√£o: https://docs.microsoft.com/pt-br/nuget/nuget-org/publish-a-package
 - GitHub Actions: https://docs.github.com/pt/actions
 
 ## Troubleshooting
 
 ### Erro: "Package already exists"
-- N„o È possÌvel republicar a mesma vers„o
-- Incremente a vers„o e tente novamente
+- N√£o √© poss√≠vel republicar a mesma vers√£o
+- Incremente a vers√£o e tente novamente
 
 ### Erro: "Invalid API Key"
-- Verifique se a API Key est· correta
-- Certifique-se de que a key tem permissıes para publicar pacotes
+- Verifique se a API Key est√° correta
+- Certifique-se de que a key tem permiss√µes para publicar pacotes
 
-### Pacote n„o aparece no NuGet.org
-- Aguarde alguns minutos (indexaÁ„o pode demorar)
-- Verifique se n„o h· erros de validaÁ„o no portal
+### Pacote n√£o aparece no NuGet.org
+- Aguarde alguns minutos (indexa√ß√£o pode demorar)
+- Verifique se n√£o h√° erros de valida√ß√£o no portal
