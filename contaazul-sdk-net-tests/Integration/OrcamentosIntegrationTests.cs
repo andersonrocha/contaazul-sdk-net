@@ -38,8 +38,8 @@ public class OrcamentosIntegrationTests : IntegrationTestBase
         RequireWrite();
 
         // Um orçamento exige um cliente e um item (produto/serviço) reais.
-        var clientes = await Client.Pessoas.ObterPessoasAsync(new PessoaFiltro { TamanhoPagina = 1 });
-        var produtos = await Client.Produtos.ObterProdutosAsync(new ProdutoFiltro { TamanhoPagina = 1 });
+        var clientes = await Client.Pessoas.ObterPessoasAsync(new PessoaFiltro { TamanhoPagina = 10 });
+        var produtos = await Client.Produtos.ObterProdutosAsync(new ProdutoFiltro { TamanhoPagina = 10 });
         if (clientes.Items is null || clientes.Items.Count == 0 || produtos.Items is null || produtos.Items.Count == 0)
         {
             Assert.Ignore("É necessário ao menos um cliente e um produto cadastrados para montar um orçamento.");

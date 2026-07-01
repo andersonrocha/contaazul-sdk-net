@@ -3,7 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/v/ContaAzul.Sdk.Net.svg)](https://www.nuget.org/packages/ContaAzul.Sdk.Net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-SDK não oficial em .NET Standard 2.0 para integração com a API do ContaAzul.
+SDK não oficial em .NET Standard 2.0 para integração com a API 2.0 do ContaAzul.
 
 ## ✨ Características
 
@@ -440,7 +440,7 @@ ProdutoEcommerceCategoria arvore = await client.Produtos.ObterCategoriasEcommerc
 
 **Filtros de produtos (`ProdutoFiltro`):** `Pagina`, `TamanhoPagina`, `CampoOrdenacao` (`NOME`/`CODIGO`/`VALOR_VENDA`), `DirecaoOrdenacao` (`ASC`/`DESC`), `Busca`, `Status` (`ATIVO`/`INATIVO`), `IntegracaoEcommerceAtivo`, `ProdutosKitAtivo`, `ValorVendaInicial`, `ValorVendaFinal`, `Sku`, `DataAlteracaoDe`, `DataAlteracaoAte`.
 
-**Filtros auxiliares:** `BuscaTextualFiltro` (`Pagina`, `TamanhoPagina`, `BuscaTextual`) para categorias, CEST, NCM e unidades de medida; `MarcaEcommerceFiltro` adiciona `Direcao`. As categorias de e-commerce aceitam apenas busca textual (parâmetro `string` no método).
+**Filtros auxiliares:** `BuscaTextualFiltro` (`Pagina`, `TamanhoPagina`, `BuscaTextual`) para categorias, CEST, NCM e unidades de medida; `MarcaEcommerceFiltro` adiciona `Direcao`. Os dois endpoints de e-commerce (categorias e marcas) **exigem** um `busca_textual` não vazio — sem ele a API retorna HTTP 400. Nas categorias, ele é um parâmetro `string` obrigatório do método.
 
 ### 8. API de Serviços (ServicosApi)
 

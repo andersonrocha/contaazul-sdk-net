@@ -162,6 +162,10 @@ namespace ContaAzul.Sdk.Net.Apis
 
         /// <summary>
         /// Lista as marcas de e-commerce (<c>GET /v1/produtos/ecommerce-marcas</c>).
+        /// <para>
+        /// A API real exige um <c>busca_textual</c> não vazio no filtro; sem ele o endpoint
+        /// retorna HTTP 400 ("filtros inválidos").
+        /// </para>
         /// </summary>
         /// <param name="filtro">Filtros de paginação, ordenação e busca textual. Opcional.</param>
         /// <param name="cancellationToken">Token de cancelamento da operação.</param>
@@ -174,17 +178,20 @@ namespace ContaAzul.Sdk.Net.Apis
 
         /// <summary>
         /// Lista as categorias de e-commerce (<c>GET /v1/produtos/ecommerce-categorias</c>).
-        /// Este endpoint aceita apenas busca textual (sem paginação).
+        /// Este endpoint aceita apenas busca textual (sem paginação) e a API real exige um termo
+        /// não vazio — uma chamada sem <paramref name="buscaTextual"/> retorna HTTP 400.
         /// </summary>
-        /// <param name="buscaTextual">Busca textual pela descrição da categoria. Opcional.</param>
+        /// <param name="buscaTextual">Busca textual pela descrição da categoria. Obrigatório.</param>
         /// <param name="cancellationToken">Token de cancelamento da operação.</param>
-        public async Task<ProdutoEcommerceCategoria> ObterCategoriasEcommerceAsync(string buscaTextual = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException">Lançada quando <paramref name="buscaTextual"/> é nulo ou vazio.</exception>
+        public async Task<ProdutoEcommerceCategoria> ObterCategoriasEcommerceAsync(string buscaTextual, CancellationToken cancellationToken = default)
         {
-            var endpoint = $"{ProdutosEndpoint}/ecommerce-categorias";
-            if (!string.IsNullOrWhiteSpace(buscaTextual))
+            if (string.IsNullOrWhiteSpace(buscaTextual))
             {
-                endpoint += $"?busca_textual={Uri.EscapeDataString(buscaTextual)}";
+                throw new ArgumentNullException(nameof(buscaTextual));
             }
+
+            var endpoint = $"{ProdutosEndpoint}/ecommerce-categorias?busca_textual={Uri.EscapeDataString(buscaTextual)}";
 
             return await _client.GetAsync<ProdutoEcommerceCategoria>(endpoint, cancellationToken).ConfigureAwait(false);
         }

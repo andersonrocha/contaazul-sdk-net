@@ -264,4 +264,11 @@ public class ProdutosApiHttpContractTests
             Assert.That(resp.Items![0].Subcategorias![0].Id, Is.EqualTo("c-2"));
         });
     }
+
+    [Test]
+    public void ObterCategoriasEcommerce_ComBuscaVaziaLancaArgumentNullException()
+    {
+        using var client = TestClientFactory.Build(new CapturingHttpHandler());
+        Assert.ThrowsAsync<ArgumentNullException>(async () => await client.Produtos.ObterCategoriasEcommerceAsync(" "));
+    }
 }

@@ -1,6 +1,4 @@
 using System;
-using ContaAzul.Sdk.Net;
-using Microsoft.Extensions.Configuration;
 
 namespace ContaAzul.Sdk.Net.Tests.Integration;
 
@@ -12,74 +10,31 @@ namespace ContaAzul.Sdk.Net.Tests.Integration;
 /// <code>dotnet test --filter TestCategory=Integration</code>
 /// </para>
 /// <para>
-/// Configuração na seção <c>ContaAzul</c>, resolvida nesta ordem (a última vence):
-/// <list type="number">
-/// <item><c>appsettings.Integration.json</c> (opcional; no .gitignore)</item>
-/// <item>User Secrets (<c>dotnet user-secrets</c>)</item>
-/// <item>Variáveis de ambiente (<c>ContaAzul__ClientId</c>, <c>ContaAzul__ClientSecret</c>, ...)</item>
-/// </list>
-/// Chaves: <c>ClientId</c>, <c>ClientSecret</c>, <c>AccessToken</c>, <c>RefreshToken</c>,
-/// <c>ApiBaseUrl</c> (opcional) e <c>AllowWrite</c> (habilita os testes de escrita).
-/// Se as credenciais não estiverem presentes, a fixture é ignorada (<c>Assert.Ignore</c>).
+/// Todas as fixtures compartilham o MESMO cliente (ver <see cref="IntegrationSetup"/>), criado
+/// uma única vez por execução. Isso é necessário por causa da rotação do refresh token do
+/// ContaAzul: um cliente por fixture faria a primeira renovação invalidar o token das demais.
+/// A configuração (seção <c>ContaAzul</c>) e o <c>AllowWrite</c> também vivem em
+/// <see cref="IntegrationSetup"/>.
 /// </para>
 /// </summary>
 [Explicit("Testes de integração ao vivo: requerem credenciais reais do ContaAzul.")]
 [Category("Integration")]
 public abstract class IntegrationTestBase
 {
-    private static readonly IConfiguration Configuration = BuildConfiguration();
-
-    /// <summary>Cliente autenticado disponível para os testes.</summary>
-    protected IContaAzulApiClient Client { get; private set; } = null!;
+    /// <summary>Cliente autenticado, compartilhado por toda a execução dos testes de integração.</summary>
+    protected IContaAzulApiClient Client => IntegrationSetup.Client!;
 
     /// <summary>Indica se os testes de escrita estão habilitados (<c>ContaAzul:AllowWrite = true</c>).</summary>
-    protected static bool AllowWrite =>
-        string.Equals(Configuration["ContaAzul:AllowWrite"], "true", StringComparison.OrdinalIgnoreCase);
-
-    private static IConfiguration BuildConfiguration() =>
-        new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.Integration.json", optional: true, reloadOnChange: false)
-            .AddUserSecrets(typeof(IntegrationTestBase).Assembly, optional: true)
-            .AddEnvironmentVariables()
-            .Build();
+    protected static bool AllowWrite => IntegrationSetup.AllowWrite;
 
     [OneTimeSetUp]
     public void BaseOneTimeSetUp()
     {
-        var clientId = Configuration["ContaAzul:ClientId"];
-        var clientSecret = Configuration["ContaAzul:ClientSecret"];
-        var accessToken = Configuration["ContaAzul:AccessToken"];
-        var refreshToken = Configuration["ContaAzul:RefreshToken"];
-
-        if (string.IsNullOrWhiteSpace(clientId) ||
-            string.IsNullOrWhiteSpace(clientSecret) ||
-            (string.IsNullOrWhiteSpace(accessToken) && string.IsNullOrWhiteSpace(refreshToken)))
+        if (IntegrationSetup.SkipReason != null)
         {
-            Assert.Ignore(
-                "Credenciais de integração ausentes. Configure a seção 'ContaAzul' " +
-                "(appsettings.Integration.json, User Secrets ou variáveis de ambiente) com " +
-                "ClientId, ClientSecret e AccessToken e/ou RefreshToken.");
+            Assert.Ignore(IntegrationSetup.SkipReason);
         }
-
-        var options = new ContaAzulApiClientOptions();
-        var baseUrl = Configuration["ContaAzul:ApiBaseUrl"];
-        if (!string.IsNullOrWhiteSpace(baseUrl))
-        {
-            options.BaseUrl = baseUrl;
-        }
-
-        Client = new ContaAzulApiClient(clientId, clientSecret, accessToken, refreshToken, options);
-
-        // O ContaAzul rotaciona o refresh token a cada renovação; registramos os novos
-        // valores no log do teste para que possam ser persistidos manualmente, se necessário.
-        Client.TokenRefreshed += (_, e) =>
-            TestContext.Progress.WriteLine(
-                $"[ContaAzul] Tokens renovados. Novo refresh token: {e.RefreshToken}. Expira em: {e.TokenExpiresAt:O}");
     }
-
-    [OneTimeTearDown]
-    public void BaseOneTimeTearDown() => Client?.Dispose();
 
     /// <summary>Pula o teste atual quando a escrita não está habilitada.</summary>
     protected static void RequireWrite()
