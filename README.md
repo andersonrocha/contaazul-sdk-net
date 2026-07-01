@@ -11,9 +11,14 @@ SDK não oficial em .NET Standard 2.0 para integração com a API do ContaAzul.
 - ✅ Refresh automático de tokens
 - ✅ Construtor com tokens armazenados (restauração de sessão)
 - ✅ Evento `TokenRefreshed` para persistência automática de tokens
-- ✅ API de Pessoas
-- ✅ API de Vendas
-- ✅ API de Notas Fiscais (produto/NF-e e serviço/NFS-e)
+- ✅ API de Pessoas (CRUD, operações em lote, empresa conectada)
+- ✅ API de Vendas (busca, detalhe, criação, edição, itens, PDF)
+- ✅ API de Notas Fiscais (produto/NF-e e serviço/NFS-e, MDF-e, XML)
+- ✅ API de Contratos (vendas recorrentes/agendadas)
+- ✅ API de Cobranças (contas a receber)
+- ✅ API de Baixas (baixas de parcelas)
+- ✅ API de Financeiro (centros de custo, categorias, contas, parcelas, saldos)
+- ✅ API de Produtos (catálogo/inventário e tabelas fiscais/e-commerce)
 - ✅ Suporte para .NET Standard 2.0
 - ✅ Totalmente assíncrono
 - ✅ Política de retry com backoff exponencial configurável
@@ -349,6 +354,91 @@ string xml = await client.NotasFiscais.ObterNotaFiscalPorChaveAsync(
 
 **Filtros de NFS-e (`NotaFiscalServicoFiltro`):** `Pagina`, `TamanhoPagina`, `DataCompetenciaDe`*, `DataCompetenciaAte`*, `Ids`, `IdCliente`, `NumeroVenda`, `NumeroNfseInicial`, `NumeroNfseFinal`, `NumeroRpsInicial`, `NumeroRpsFinal`, `Status`, `TipoNegociacao` (* obrigatórios).
 
+### 7. API de Produtos (ProdutosApi)
+
+A API de Produtos (inventário) é acessada através da propriedade `Produtos` do cliente e cobre o
+catálogo de produtos (listar, criar, detalhar, atualizar parcialmente e excluir) e as tabelas
+auxiliares (categorias, CEST, NCM, unidades de medida, categorias e marcas de e-commerce):
+
+```csharp
+using ContaAzul.Sdk.Net;
+using ContaAzul.Sdk.Net.Models.Produtos;
+
+var client = new ContaAzulApiClient(
+    clientId: "seu-client-id",
+    clientSecret: "seu-client-secret"
+);
+
+await client.AuthorizeAsync(code, redirectUri);
+```
+
+#### 7.1. Listar produtos
+
+```csharp
+var filtro = new ProdutoFiltro
+{
+    Pagina = 1,
+    TamanhoPagina = 20,
+    Busca = "café",
+    Status = "ATIVO",           // ATIVO ou INATIVO
+    CampoOrdenacao = "NOME",    // NOME, CODIGO ou VALOR_VENDA
+    ValorVendaInicial = 10,
+    ValorVendaFinal = 500
+};
+
+ResumoDeProdutos resumo = await client.Produtos.ObterProdutosAsync(filtro);
+
+Console.WriteLine($"Total: {resumo.TotalItems}");
+foreach (var p in resumo.Items)
+{
+    Console.WriteLine($"{p.Codigo} - {p.Nome} - R$ {p.ValorVenda} (saldo: {p.Saldo})");
+}
+```
+
+#### 7.2. Detalhar, criar, atualizar e excluir
+
+```csharp
+// Detalhe completo (estoque, fiscal, e-commerce, variações, dimensões, etc.)
+Produto produto = await client.Produtos.ObterProdutoPorIdAsync("produto-id");
+
+// Criar — apenas "Nome" é obrigatório
+Produto novo = await client.Produtos.CriarProdutoAsync(new CriacaoProduto
+{
+    Nome = "Café Torrado 500g",
+    CodigoSku = "CAFE500",
+    Estoque = new CriacaoEstoqueProduto { ValorVenda = 24.90m, EstoqueDisponivel = 100 },
+    Fiscal = new CriacaoFiscalProduto
+    {
+        Ncm = new ReferenciaIdInteiroProduto { Id = 1 },
+        UnidadeMedida = new ReferenciaIdInteiroProduto { Id = 1 }
+    }
+});
+
+// Atualização parcial (PATCH) — só os campos informados mudam
+await client.Produtos.AtualizarParcialmenteProdutoAsync(novo.Id, new AtualizacaoParcialProduto
+{
+    ValorVenda = 27.50m
+});
+
+// Excluir
+await client.Produtos.DeletarProdutoPorIdAsync(novo.Id);
+```
+
+#### 7.3. Tabelas auxiliares (fiscal e e-commerce)
+
+```csharp
+CategoriasDeProduto categorias   = await client.Produtos.ObterCategoriasAsync(new BuscaTextualFiltro { BuscaTextual = "bebidas" });
+CESTsDeProduto cests             = await client.Produtos.ObterCestsAsync(new BuscaTextualFiltro { BuscaTextual = "0100" });
+NCMsDeProduto ncms               = await client.Produtos.ObterNcmsAsync();
+UnidadesDeMedidaDeProduto uns    = await client.Produtos.ObterUnidadesMedidaAsync();
+MarcaDeEcommerce marcas          = await client.Produtos.ObterMarcasEcommerceAsync(new MarcaEcommerceFiltro { Direcao = "ASC" });
+ProdutoEcommerceCategoria arvore = await client.Produtos.ObterCategoriasEcommerceAsync("eletrônicos");
+```
+
+**Filtros de produtos (`ProdutoFiltro`):** `Pagina`, `TamanhoPagina`, `CampoOrdenacao` (`NOME`/`CODIGO`/`VALOR_VENDA`), `DirecaoOrdenacao` (`ASC`/`DESC`), `Busca`, `Status` (`ATIVO`/`INATIVO`), `IntegracaoEcommerceAtivo`, `ProdutosKitAtivo`, `ValorVendaInicial`, `ValorVendaFinal`, `Sku`, `DataAlteracaoDe`, `DataAlteracaoAte`.
+
+**Filtros auxiliares:** `BuscaTextualFiltro` (`Pagina`, `TamanhoPagina`, `BuscaTextual`) para categorias, CEST, NCM e unidades de medida; `MarcaEcommerceFiltro` adiciona `Direcao`. As categorias de e-commerce aceitam apenas busca textual (parâmetro `string` no método).
+
 ## Injeção de Dependências
 
 Use o método de extensão `AddContaAzulApiClient` para registrar o cliente no contêiner de DI:
@@ -391,9 +481,14 @@ public class MeuServico
 
 Todas as APIs são acessadas através de propriedades do `ContaAzulApiClient`:
 
-- **`client.Pessoas`**: API para listar e filtrar pessoas (clientes, fornecedores, etc.).
-- **`client.Vendas`**: API para buscar e filtrar vendas.
-- **`client.NotasFiscais`**: API para buscar e filtrar notas fiscais de serviço.
+- **`client.Pessoas`**: gerencia pessoas (clientes, fornecedores, transportadoras) — CRUD, operações em lote e empresa conectada.
+- **`client.Vendas`**: busca e detalha vendas, cria/edita, itens, exclusão em lote, PDF e vendedores.
+- **`client.NotasFiscais`**: notas fiscais de produto (NF-e) e serviço (NFS-e), vínculo a MDF-e e consulta de XML por chave.
+- **`client.Contratos`**: contratos (vendas recorrentes/agendadas) — listagem, detalhe, criação, encerramento e remoção.
+- **`client.Cobrancas`**: gera, consulta e cancela cobranças (contas a receber).
+- **`client.Baixas`**: cria, lista, consulta, atualiza e exclui baixas de parcelas.
+- **`client.Financeiro`**: centros de custo, categorias, categorias DRE, contas financeiras, saldos, transferências, contas a pagar/receber, parcelas e eventos.
+- **`client.Produtos`**: catálogo de produtos (inventário) e tabelas fiscais/e-commerce (categorias, CEST, NCM, unidades de medida, marcas).
 
 ### Classes Base
 
@@ -459,6 +554,11 @@ var pessoas = await client.Pessoas.ObterPessoasAsync(filtro);
 - **`LinkNotaFiscalMdfe`**: Dados para vincular notas fiscais a um MDF-e.
 - **`RespostaPaginada<T>`**: Resposta paginada genérica (`Itens`, `Paginacao`).
 - **`Paginacao`**: Informações de paginação (`PaginaAtual`, `TotalPaginas`, `TamanhoPagina`, `TotalItens`).
+- **`ResumoDeProdutos`** / **`ItemResumoDeProdutos`**: Resposta e item da listagem de produtos.
+- **`Produto`**: Detalhe completo de um produto (estoque, fiscal, e-commerce, variações, dimensões).
+- **`CriacaoProduto`** / **`AtualizacaoParcialProduto`**: Dados para criar (POST) e atualizar parcialmente (PATCH) um produto.
+- **`ProdutoFiltro`**: Filtros para busca de produtos.
+- **`CategoriasDeProduto`**, **`CESTsDeProduto`**, **`NCMsDeProduto`**, **`UnidadesDeMedidaDeProduto`**, **`MarcaDeEcommerce`**, **`ProdutoEcommerceCategoria`**: Respostas das listagens auxiliares de produtos.
 - **`ApiError`**: Modelo de erro retornado pela API.
 
 ### Exemplo de Uso Completo

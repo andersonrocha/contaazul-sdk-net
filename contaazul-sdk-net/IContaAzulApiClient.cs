@@ -55,6 +55,9 @@ namespace ContaAzul.Sdk.Net
         /// <summary>Gets the Financeiro (financial) API.</summary>
         FinanceiroApi Financeiro { get; }
 
+        /// <summary>Gets the Produtos (products/inventory) API.</summary>
+        ProdutosApi Produtos { get; }
+
         /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
