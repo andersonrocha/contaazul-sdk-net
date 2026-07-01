@@ -55,6 +55,18 @@ namespace ContaAzul.Sdk.Net
         /// <summary>Gets the Financeiro (financial) API.</summary>
         FinanceiroApi Financeiro { get; }
 
+        /// <summary>Gets the Produtos (products/inventory) API.</summary>
+        ProdutosApi Produtos { get; }
+
+        /// <summary>Gets the Serviços (services) API.</summary>
+        ServicosApi Servicos { get; }
+
+        /// <summary>Gets the Protocolos (protocol tracking) API.</summary>
+        ProtocolosApi Protocolos { get; }
+
+        /// <summary>Gets the Orçamentos (quotes/proposals) API.</summary>
+        OrcamentosApi Orcamentos { get; }
+
         /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
@@ -183,5 +195,15 @@ namespace ContaAzul.Sdk.Net
         /// <param name="endpoint">The API endpoint.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a DELETE request with a request body to the specified endpoint without reading a
+        /// response body. Intended for batch-delete endpoints that return <c>204 No Content</c>.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request body.</typeparam>
+        /// <param name="endpoint">The API endpoint.</param>
+        /// <param name="data">The request body data.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        Task DeleteAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default);
     }
 }
