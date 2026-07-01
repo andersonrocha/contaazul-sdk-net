@@ -21,6 +21,7 @@ SDK não oficial em .NET Standard 2.0 para integração com a API do ContaAzul.
 - ✅ API de Produtos (catálogo/inventário e tabelas fiscais/e-commerce)
 - ✅ API de Serviços (catálogo de serviços)
 - ✅ API de Protocolos (acompanhamento de eventos financeiros)
+- ✅ API de Orçamentos (propostas comerciais)
 - ✅ Suporte para .NET Standard 2.0
 - ✅ Totalmente assíncrono
 - ✅ Política de retry com backoff exponencial configurável
@@ -517,6 +518,77 @@ Protocolo protocolo = await client.Protocolos.ObterProtocoloPorIdAsync("protocol
 Console.WriteLine($"{protocolo.Status}: {protocolo.Resposta}");
 ```
 
+### 10. API de Orçamentos (OrcamentosApi)
+
+A API de Orçamentos é acessada através da propriedade `Orcamentos` e cobre propostas comerciais
+(listar com filtros, detalhar, criar e excluir em lote):
+
+```csharp
+using ContaAzul.Sdk.Net;
+using ContaAzul.Sdk.Net.Models;
+using ContaAzul.Sdk.Net.Models.Orcamentos;
+
+var client = new ContaAzulApiClient(
+    clientId: "seu-client-id",
+    clientSecret: "seu-client-secret"
+);
+
+await client.AuthorizeAsync(code, redirectUri);
+```
+
+#### 10.1. Listar e detalhar
+
+```csharp
+var filtro = new OrcamentoFiltro
+{
+    Pagina = 1,
+    TamanhoPagina = 20,
+    TermoBusca = "proposta",
+    CampoOrdenadoDescendente = "DATA",          // DATA, NUMERO ou CLIENTE
+    Situacoes = "ORCAMENTO,ORCAMENTO_ACEITO",   // múltiplos valores separados por vírgula
+    DataInicio = "2026-01-01",
+    DataFim = "2026-12-31"
+};
+
+ListagemOrcamentosPorFiltro orcamentos = await client.Orcamentos.ObterOrcamentosAsync(filtro);
+
+Console.WriteLine($"Total: {orcamentos.TotalItens}");
+foreach (var o in orcamentos.Itens)
+{
+    Console.WriteLine($"#{o.Numero} - {o.Cliente?.Nome} - {o.Situacao} - R$ {o.Total}");
+}
+
+Orcamento orcamento = await client.Orcamentos.ObterOrcamentoPorIdAsync("orcamento-id");
+```
+
+#### 10.2. Criar e excluir em lote
+
+```csharp
+ResumoCriacaoOrcamento novo = await client.Orcamentos.CriarOrcamentoAsync(new CriarOrcamento
+{
+    DataOrcamento = "2026-05-01",
+    DataValidade = "2026-05-15",              // não pode ser anterior à data do orçamento
+    IdCliente = "cliente-id",
+    Itens = new List<CriarItemOrcamento>
+    {
+        new CriarItemOrcamento { Id = "produto-ou-servico-id", Quantidade = 2, Valor = 150 }
+    },
+    ComposicaoDeValor = new ComposicaoValorOrcamento
+    {
+        Frete = 20,
+        Desconto = new Desconto { Tipo = "PORCENTAGEM", Valor = 10 }   // VALOR ou PORCENTAGEM
+    }
+});
+
+// Exclusão em lote (máximo de 10 IDs)
+await client.Orcamentos.ExcluirOrcamentosEmLoteAsync(new ExclusaoLoteOrcamento
+{
+    Ids = new List<string> { novo.Id }
+});
+```
+
+**Filtros de orçamentos (`OrcamentoFiltro`):** `Pagina`, `TamanhoPagina`, `CampoOrdenadoAscendente`, `CampoOrdenadoDescendente`, `TermoBusca`, `DataInicio`, `DataFim`, `DataCriacaoDe`, `DataCriacaoAte`, `DataAlteracaoDe`, `DataAlteracaoAte`, `IdsVendedores`, `IdsClientes`, `IdsNaturezaOperacao`, `IdsCategorias`, `IdsProdutos`, `Situacoes`, `Origens`, `Numeros`, `IdsLegadoDonos`, `IdsLegadoClientes`, `IdsLegadoProdutos` (campos de múltiplos valores separados por vírgula).
+
 ## Injeção de Dependências
 
 Use o método de extensão `AddContaAzulApiClient` para registrar o cliente no contêiner de DI:
@@ -569,6 +641,7 @@ Todas as APIs são acessadas através de propriedades do `ContaAzulApiClient`:
 - **`client.Produtos`**: catálogo de produtos (inventário) e tabelas fiscais/e-commerce (categorias, CEST, NCM, unidades de medida, marcas).
 - **`client.Servicos`**: catálogo de serviços — listar, criar, detalhar, atualizar parcialmente e excluir em lote.
 - **`client.Protocolos`**: acompanhamento do processamento assíncrono de eventos financeiros (status `PENDING`/`SUCCESS`/`ERROR`).
+- **`client.Orcamentos`**: propostas comerciais — listar com filtros, detalhar, criar e excluir em lote.
 
 ### Classes Base
 
@@ -645,6 +718,12 @@ var pessoas = await client.Pessoas.ObterPessoasAsync(filtro);
 - **`ServicoFiltro`**: Filtros para busca de serviços.
 - **`ParametrosParaDeletarServicosEmLote`**: IDs para exclusão de serviços em lote.
 - **`Protocolo`**: Protocolo de acompanhamento de um evento financeiro (status `PENDING`/`SUCCESS`/`ERROR`).
+- **`Orcamento`**: Detalhe completo de um orçamento.
+- **`ListagemOrcamentosPorFiltro`**: Resposta da listagem de orçamentos (`Itens`, `TotalItens`).
+- **`CriarOrcamento`** / **`ResumoCriacaoOrcamento`**: Dados para criar (POST) e resposta com o ID criado.
+- **`OrcamentoFiltro`**: Filtros para busca de orçamentos.
+- **`ComposicaoValorOrcamento`**, **`ItemOrcamento`**, **`ClienteOrcamento`**: Submodelos de orçamento.
+- **`ExclusaoLoteOrcamento`**: IDs para exclusão de orçamentos em lote.
 - **`ApiError`**: Modelo de erro retornado pela API.
 
 ### Exemplo de Uso Completo

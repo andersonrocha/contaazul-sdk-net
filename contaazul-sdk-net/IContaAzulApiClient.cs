@@ -64,6 +64,9 @@ namespace ContaAzul.Sdk.Net
         /// <summary>Gets the Protocolos (protocol tracking) API.</summary>
         ProtocolosApi Protocolos { get; }
 
+        /// <summary>Gets the Orçamentos (quotes/proposals) API.</summary>
+        OrcamentosApi Orcamentos { get; }
+
         /// <summary>
         /// Raised after tokens are successfully updated — either via <see cref="AuthorizeAsync"/>
         /// or an automatic/manual <see cref="RefreshTokenAsync"/>.
