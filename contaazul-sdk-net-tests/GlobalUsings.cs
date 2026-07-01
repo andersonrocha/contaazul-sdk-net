@@ -7,3 +7,5 @@ global using ContaAzul.Sdk.Net.Models.Pessoas;
 global using ContaAzul.Sdk.Net.Models.NotasFiscais;
 global using ContaAzul.Sdk.Net.Models.Financeiro;
 global using ContaAzul.Sdk.Net.Models.Produtos;
+global using ContaAzul.Sdk.Net.Models.Servicos;
+global using ContaAzul.Sdk.Net.Models.Protocolos;

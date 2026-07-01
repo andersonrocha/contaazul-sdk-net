@@ -181,6 +181,22 @@ namespace ContaAzul.Sdk.Net.Http
         }
 
         /// <summary>
+        /// Sends a DELETE request with a request body but without deserializing the response.
+        /// Used for batch-delete endpoints that take a payload and return <c>204 No Content</c>.
+        /// </summary>
+        protected async Task CoreDeleteAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(HttpMethod.Delete, endpoint, CreateJsonContent(data));
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ThrowApiException(response.StatusCode, content);
+            }
+        }
+
+        /// <summary>
         /// Sends a POST request without a request body and without deserializing the response.
         /// Used for action endpoints that take no payload and return <c>204 No Content</c>.
         /// </summary>

@@ -19,6 +19,8 @@ SDK não oficial em .NET Standard 2.0 para integração com a API do ContaAzul.
 - ✅ API de Baixas (baixas de parcelas)
 - ✅ API de Financeiro (centros de custo, categorias, contas, parcelas, saldos)
 - ✅ API de Produtos (catálogo/inventário e tabelas fiscais/e-commerce)
+- ✅ API de Serviços (catálogo de serviços)
+- ✅ API de Protocolos (acompanhamento de eventos financeiros)
 - ✅ Suporte para .NET Standard 2.0
 - ✅ Totalmente assíncrono
 - ✅ Política de retry com backoff exponencial configurável
@@ -439,6 +441,82 @@ ProdutoEcommerceCategoria arvore = await client.Produtos.ObterCategoriasEcommerc
 
 **Filtros auxiliares:** `BuscaTextualFiltro` (`Pagina`, `TamanhoPagina`, `BuscaTextual`) para categorias, CEST, NCM e unidades de medida; `MarcaEcommerceFiltro` adiciona `Direcao`. As categorias de e-commerce aceitam apenas busca textual (parâmetro `string` no método).
 
+### 8. API de Serviços (ServicosApi)
+
+A API de Serviços é acessada através da propriedade `Servicos` do cliente e cobre o catálogo de
+serviços da empresa (listar, criar, detalhar, atualizar parcialmente e excluir em lote):
+
+```csharp
+using ContaAzul.Sdk.Net;
+using ContaAzul.Sdk.Net.Models.Servicos;
+
+var client = new ContaAzulApiClient(
+    clientId: "seu-client-id",
+    clientSecret: "seu-client-secret"
+);
+
+await client.AuthorizeAsync(code, redirectUri);
+```
+
+#### 8.1. Listar e detalhar
+
+```csharp
+var filtro = new ServicoFiltro { Pagina = 1, TamanhoPagina = 20, BuscaTextual = "consultoria" };
+
+ServicosPorFiltro servicos = await client.Servicos.ObterServicosAsync(filtro);
+
+Console.WriteLine($"Total: {servicos.Paginacao?.TotalItens}");
+foreach (var s in servicos.Itens)
+{
+    Console.WriteLine($"{s.Codigo} - {s.Descricao} - R$ {s.Preco}");
+}
+
+Servico servico = await client.Servicos.ObterServicoPorIdAsync("servico-id");
+```
+
+#### 8.2. Criar, atualizar e excluir em lote
+
+```csharp
+// Criar — apenas "Descricao" é obrigatório
+Servico novo = await client.Servicos.CriarServicoAsync(new CriarServico
+{
+    Descricao = "Consultoria técnica",
+    Codigo = "SERV001",
+    Preco = 500,
+    TipoServico = "PRESTADO",   // PRESTADO, TOMADO ou AMBOS
+    Status = "ATIVO"
+});
+
+// Atualização parcial (PATCH) — só os campos informados mudam
+await client.Servicos.AtualizarParcialmenteServicoAsync(novo.Id, new AtualizacaoParcialServico
+{
+    Preco = 550
+});
+
+// Exclusão em lote (usa o id legado `id_servico` retornado na criação)
+await client.Servicos.DeletarServicosEmLoteAsync(new ParametrosParaDeletarServicosEmLote
+{
+    Ids = new List<int> { novo.IdServico.Value }
+});
+```
+
+**Filtros de serviços (`ServicoFiltro`):** `Pagina`, `TamanhoPagina`, `BuscaTextual`.
+
+### 9. API de Protocolos (ProtocolosApi)
+
+A API de Protocolos é acessada através da propriedade `Protocolos` e permite acompanhar o
+processamento assíncrono de eventos financeiros enviados ao ERP. Ao enviar um evento (ex.: uma
+conta a pagar/receber), a Conta Azul retorna um protocolo cujo status pode ser consultado:
+
+```csharp
+using ContaAzul.Sdk.Net.Models.Protocolos;
+
+Protocolo protocolo = await client.Protocolos.ObterProtocoloPorIdAsync("protocolo-id");
+
+// Status: PENDING (em processamento), SUCCESS (criado) ou ERROR (erro na criação)
+Console.WriteLine($"{protocolo.Status}: {protocolo.Resposta}");
+```
+
 ## Injeção de Dependências
 
 Use o método de extensão `AddContaAzulApiClient` para registrar o cliente no contêiner de DI:
@@ -489,6 +567,8 @@ Todas as APIs são acessadas através de propriedades do `ContaAzulApiClient`:
 - **`client.Baixas`**: cria, lista, consulta, atualiza e exclui baixas de parcelas.
 - **`client.Financeiro`**: centros de custo, categorias, categorias DRE, contas financeiras, saldos, transferências, contas a pagar/receber, parcelas e eventos.
 - **`client.Produtos`**: catálogo de produtos (inventário) e tabelas fiscais/e-commerce (categorias, CEST, NCM, unidades de medida, marcas).
+- **`client.Servicos`**: catálogo de serviços — listar, criar, detalhar, atualizar parcialmente e excluir em lote.
+- **`client.Protocolos`**: acompanhamento do processamento assíncrono de eventos financeiros (status `PENDING`/`SUCCESS`/`ERROR`).
 
 ### Classes Base
 
@@ -559,6 +639,12 @@ var pessoas = await client.Pessoas.ObterPessoasAsync(filtro);
 - **`CriacaoProduto`** / **`AtualizacaoParcialProduto`**: Dados para criar (POST) e atualizar parcialmente (PATCH) um produto.
 - **`ProdutoFiltro`**: Filtros para busca de produtos.
 - **`CategoriasDeProduto`**, **`CESTsDeProduto`**, **`NCMsDeProduto`**, **`UnidadesDeMedidaDeProduto`**, **`MarcaDeEcommerce`**, **`ProdutoEcommerceCategoria`**: Respostas das listagens auxiliares de produtos.
+- **`Servico`**: Detalhe completo de um serviço.
+- **`ServicosPorFiltro`**: Resposta paginada da listagem de serviços (`Itens`, `Paginacao`).
+- **`CriarServico`** / **`AtualizacaoParcialServico`**: Dados para criar (POST) e atualizar parcialmente (PATCH) um serviço.
+- **`ServicoFiltro`**: Filtros para busca de serviços.
+- **`ParametrosParaDeletarServicosEmLote`**: IDs para exclusão de serviços em lote.
+- **`Protocolo`**: Protocolo de acompanhamento de um evento financeiro (status `PENDING`/`SUCCESS`/`ERROR`).
 - **`ApiError`**: Modelo de erro retornado pela API.
 
 ### Exemplo de Uso Completo

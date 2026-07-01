@@ -85,6 +85,8 @@ namespace ContaAzul.Sdk.Net
         public BaixasApi Baixas { get; }
         public FinanceiroApi Financeiro { get; }
         public ProdutosApi Produtos { get; }
+        public ServicosApi Servicos { get; }
+        public ProtocolosApi Protocolos { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContaAzulApiClient"/> class with stored tokens.
@@ -165,6 +167,8 @@ namespace ContaAzul.Sdk.Net
             Baixas = new BaixasApi(this);
             Financeiro = new FinanceiroApi(this);
             Produtos = new ProdutosApi(this);
+            Servicos = new ServicosApi(this);
+            Protocolos = new ProtocolosApi(this);
         }
 
         /// <summary>
@@ -413,6 +417,28 @@ namespace ContaAzul.Sdk.Net
                 async () =>
                 {
                     await CoreDeleteAsync(endpoint, cancellationToken).ConfigureAwait(false);
+                    return true;
+                },
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends a DELETE request with the provided body to the specified API endpoint without
+        /// reading a response body. Intended for batch-delete endpoints that return <c>204 No Content</c>.
+        /// Automatically retries the request if the access token is expired and can be refreshed.
+        /// </summary>
+        /// <typeparam name="TRequest">The type of the request data to be sent.</typeparam>
+        /// <param name="endpoint">The API endpoint to send the DELETE request to.</param>
+        /// <param name="data">The data to send in the DELETE request body.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        public async Task DeleteAsync<TRequest>(string endpoint, TRequest data, CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            await ExecuteWithRetryAsync(
+                async () =>
+                {
+                    await CoreDeleteAsync<TRequest>(endpoint, data, cancellationToken).ConfigureAwait(false);
                     return true;
                 },
                 cancellationToken
